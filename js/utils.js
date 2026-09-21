@@ -1,7 +1,8 @@
 export const escapeHtml = (value='') => String(value).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const icon = (name, cls='') => `<svg class="icon ${cls}" aria-hidden="true" focusable="false"><use href="./assets/icons.svg#${name}"></use></svg>`;
+export const artwork = (name, cls='', width=24, height=width) => `<img class="figma-art ${cls}" src="./assets/figma/${name}" width="${width}" height="${height}" alt="" aria-hidden="true">`;
 export const money = (amount,currency='AZN') => `${new Intl.NumberFormat('az-AZ',{minimumFractionDigits:2,maximumFractionDigits:2}).format(amount)} ${currency}`;
-export const dateLabel = date => new Intl.DateTimeFormat('az-AZ',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(date));
+export const dateLabel = date => {const d=new Date(date);return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;};
 export const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 export const cleanCode = (value,numeric=false) => value.toUpperCase().replace(numeric ? /[^0-9]/g : /[^A-Z0-9]/g,'');
 export const validFin = value => /^[A-Z0-9]{7}$/.test(value);

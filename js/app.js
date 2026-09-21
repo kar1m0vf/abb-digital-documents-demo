@@ -32,7 +32,7 @@ function render({focus=false}={}){
   else{
     if(state.step>=3&&!state.authenticated){state.step=2;state.substep='fin';}
     if(state.step===7&&state.order)state.order=getInquiries().find(o=>o.id===state.order.id)||getOrders().find(o=>o.id===state.order.id)||state.order;
-    const content=state.step===1?documentType():state.step===2?(state.substep==='fin'?fin():state.substep==='otp'?otp():embassy()):state.step===3?accountSelection():state.step===4?details():state.step===5?review():state.step===6?payment():confirmation();
+    const content=state.step===1?documentType():state.step===2?(state.substep==='fin'?fin():state.substep==='otp'?otp():embassy()):state.step===3?accountSelection():state.step===4?(state.substep==='destination'?embassy():details()):state.step===5?review():state.step===6?payment():confirmation();
     main.innerHTML=shell(content);
     if(state.step===2&&state.substep==='otp'){updateCountdown();timer=setInterval(updateCountdown,1000);}
   }
@@ -57,17 +57,32 @@ function clearError(){setError('');main.querySelectorAll('[aria-invalid=true]').
 function transition(step,substep='embassy'){state.error='';state.step=step;state.substep=substep;state.maxStep=Math.max(state.maxStep,step);render({focus:true});}
 function validateDetails(){for(const a of selectedAccounts()){const d=accountDetail(a.id);if(state.draft.type==='statement'&&d.period==='custom'&&!validRange(d.start,d.end)){setError(`${a.name} · ${a.last4}: düzgün tarix aralığı seçin. Son tarix bu gündən sonra ola bilməz.`,document.querySelector(`#start-${a.id}`));return false;}}return true;}
 function next(){
-  if(state.step===1){transition(2);return;}
+  if(state.step===1){if(state.draft.type==='statement')transition(state.authenticated?3:2,'fin');else transition(2);return;}
   if(state.step===2){
     if(state.substep==='fin')return handleFin();if(state.substep==='otp')return handleOtp();
     if(state.draft.destination==='other'&&!state.draft.recipient.trim()){setError('Qurumun adını daxil edin.',document.querySelector('#recipient'));return;}
     transition(state.authenticated?3:2,state.authenticated?'embassy':'fin');return;
   }
   if(state.step===3){if(!state.draft.accounts.length){setError('Ən azı bir hesab və ya kart seçin.');return;}selectedAccounts().forEach(a=>{const d=accountDetail(a.id);if(d.equivalentCurrency===a.currency)d.equivalentCurrency=a.currency==='EUR'?'USD':'EUR';});transition(4);return;}
-  if(state.step===4){if(validateDetails())transition(5);return;}
+  if(state.step===4){
+    if(state.substep==='destination'){
+      if(state.draft.destination==='other'&&!state.draft.recipient.trim()){setError('Qurumun adını daxil edin.',document.querySelector('#recipient'));return;}
+      transition(5);
+    }else if(validateDetails()){if(state.draft.type==='statement')transition(4,'destination');else transition(5);}
+    return;
+  }
   if(state.step===5){if(!state.draft.reviewed){setError('Sənəddəki məlumatları təsdiqləyin.');return;}paymentKey=crypto.randomUUID();transition(6);}
 }
-function back(){if(state.step===2&&state.substep==='otp'){transition(2,'fin');return;}if(state.step===2&&state.substep==='fin'){transition(2);return;}if(state.step>1&&state.step<7)transition(state.step-1);}
+function back(){
+  if(state.step===2&&state.substep==='otp'){transition(2,'fin');return;}
+  if(state.draft.type==='statement'){
+    if(state.step===2||state.step===3){transition(1);return;}
+    if(state.step===4&&state.substep==='destination'){transition(4);return;}
+    if(state.step===5){transition(4,'destination');return;}
+  }
+  if(state.step===2&&state.substep==='fin'){transition(2);return;}
+  if(state.step>1&&state.step<7)transition(state.step-1);
+}
 const codeValue=name=>Array.from(main.querySelectorAll(`[data-code="${name}"] input`)).map(el=>el.value).join('');
 async function handleFin(){const value=codeValue('fin');if(!validFin(value)){setError('FİN kodunu tam daxil edin: 7 hərf və rəqəm.',main.querySelector('[data-code] input'));return;}clearError();setBusy(true);
   try{const challenge=await requestOtp(value);lastFin=value;state.challenge=challenge.id;state.otpDeadline=challenge.resendAt;setBusy(false);transition(2,'otp');main.querySelector('[data-code] input')?.focus();}
@@ -102,7 +117,7 @@ document.addEventListener('click',async event=>{
   const action=actionEl.dataset.action;
   switch(action){
     case 'next':next();break;case 'back':back();break;case 'verify-fin':await handleFin();break;case 'verify-otp':await handleOtp();break;case 'resend':await resend();break;case 'pay':await pay();break;
-    case 'jump':{const step=Number(actionEl.dataset.step);if(step>=1&&step<state.step&&state.step<7)transition(step);break;}
+    case 'jump':{const step=Number(actionEl.dataset.step);if(step>=1&&step<=state.step&&state.step<7)transition(step,actionEl.dataset.substep||'embassy');break;}
     case 'edit-details':invalidateReview();transition(4);break;
     case 'menu':{const nav=document.querySelector('#main-nav');const open=nav.classList.toggle('open');actionEl.setAttribute('aria-expanded',String(open));break;}
     case 'fin-help':finHelp();break;case 'phone-help':phoneHelp();break;case 'close-modal':closeModal();break;
@@ -148,7 +163,7 @@ main.addEventListener('keydown',event=>{const el=event.target;
 document.addEventListener('keydown',event=>{if(event.key==='Escape'){document.querySelector('#main-nav')?.classList.remove('open');document.querySelector('[data-action="menu"]')?.setAttribute('aria-expanded','false');}});
 main.addEventListener('change',event=>{
   const el=event.target;if(state.busy)return;
-  if(el.name==='document-type'){state.draft.type=el.value;if(el.value==='reference')state.draft.destination='embassy';invalidateReview();}
+  if(el.name==='document-type'){state.draft.type=el.value;if(el.value==='reference')state.draft.destination='embassy';invalidateReview();render();}
   else if(el.name==='embassy'){state.draft.embassy=el.value;invalidateReview();}
   else if(el.name==='destination'){state.draft.destination=el.value;invalidateReview();render();}
   else if(el.name==='language'){state.draft.language=el.value;for(const detail of Object.values(state.draft.details))detail.language=el.value;invalidateReview();}

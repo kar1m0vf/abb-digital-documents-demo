@@ -1,9 +1,9 @@
 export const documents = {
-  statement: { title: 'Hesabdan çıxarış', price: 5, icon: 'document', description: 'Seçdiyiniz hesab üzrə əməliyyat tarixçəsi. Səfirliyə, digər qurumlara və ya şəxsi istifadə üçün.' },
-  reference: { title: 'Səfirliyə arayış', price: 10, icon: 'plane', description: 'Hesab və kartlarınızdakı qalıq haqqında rəsmi arayış. Birbaşa seçdiyiniz səfirliyə təqdim edin.' }
+  statement: { title: 'Hesabdan Çıxarış', price: 5, icon: 'document', description: 'Seçdiyiniz hesabdan dövri çıxarış səfirliyə, digər qurumlara və ya şəxsi istifadə üçün' },
+  reference: { title: 'Səfirliyə arayış', price: 10, icon: 'plane', description: 'Seçdiyiniz hesabdan dövri çıxarış səfirliyə, digər qurumlara və ya şəxsi istifadə üçün' }
 };
 export const embassies = [
-  { id: 'italy', name: 'İtaliya səfirliyi', en: 'Embassy of Italy' },
+  { id: 'italy', name: 'İtalya səfirliyi', en: 'Embassy of Italy' },
   { id: 'germany', name: 'Almaniya səfirliyi', en: 'Embassy of Germany' },
   { id: 'france', name: 'Fransa səfirliyi', en: 'Embassy of France' },
   { id: 'spain', name: 'İspaniya səfirliyi', en: 'Embassy of Spain' },

@@ -1,6 +1,8 @@
 import { embassies, statuses } from '../data.js';
 import { state, getInquiries } from '../store.js';
-import { icon, escapeHtml as esc, dateLabel } from '../utils.js';
+import { icon as commonIcon, artwork, escapeHtml as esc, dateLabel } from '../utils.js';
+const dashboardAssets={'layers':'AbbLogoIcon','layout-dashboard':'GridIcon','search':'SearchIcon','clipboard-list':'TotalIcon','circle-check':'CheckCircleIcon','clock':'ClockIcon','circle-x':'XCircleIcon','eye':'EyeIcon','chevron-right':'ChevronIcon2'};
+const icon=(name,cls='')=>dashboardAssets[name]?artwork('dashboard-img'+dashboardAssets[name]+'.svg','icon '+cls,20):commonIcon(name,cls);
 const PAGE_SIZE=10;
 export function embassyRows(){return getInquiries().filter(o=>o.embassy===state.embassy);}
 export function filteredRows(){const q=state.query.trim().toLocaleLowerCase('az');return embassyRows().filter(o=>(state.filter==='all'||o.status===state.filter)&&(!q||`${o.id} ${o.customer}`.toLocaleLowerCase('az').includes(q)));}
