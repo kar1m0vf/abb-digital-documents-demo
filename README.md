@@ -10,7 +10,7 @@
 npm run dev
 ```
 
-Откройте **http://localhost:4173**. Устанавливать npm-пакеты для запуска не требуется. Альтернатива: VS Code Live Server на `index.html`.
+Откройте **https://kar1m0vf.github.io/abb-digital-documents-demo/#/documents**. Устанавливать npm-пакеты для запуска не требуется. Альтернатива: VS Code Live Server на `index.html`.
 
 Открывать `index.html` двойным щелчком не нужно: исходники используют ES-модули, которым необходим HTTP-сервер.
 
