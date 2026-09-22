@@ -27,12 +27,13 @@
 .currency-choice { display: inline-flex; width: 120px; height: 62px; justify-content: center; align-items: center; gap: 10px; padding: 10px; border-radius: 40px; background: #eff1f8; color: #59647a; font-size: 20px; font-weight: 600; cursor: pointer; }
 .currency-choice:has(input:checked) { border: 1px solid #0d63e0; background: #fff; color: #0d63e0; box-shadow: 0 2px 1px #0d63e040; }
 .currency-choice:has(input:focus-visible) { outline: 3px solid #8dbaff; outline-offset: 3px; }
-.currency-choice img { width: 40px; height: 40px; object-fit: contain; }
+.currency-flag { position: relative; display: block; width: 40px; height: 40px; flex: none; overflow: hidden; border-radius: 50%; }
+.currency-flag img { position: absolute; top: 50%; left: 50%; width: 138%; height: 138%; max-width: none; object-fit: contain; transform: translate(-50%, -50%); }
 @media (max-width: 760px) {
   .figma-select--embassy .figma-select-trigger { height: 56px; padding: 10px 14px; font-size: 17px; }
   .figma-select-list { border-radius: 0 0 22px 22px; padding: 12px 8px 14px; }
   .figma-select-option { font-size: 16px; margin-bottom: 6px; }
   .currency-options { gap: 10px; }
   .currency-choice { width: calc(50% - 5px); font-size: 16px; height: 54px; }
-  .currency-choice img { width: 30px; height: 30px; }
+  .currency-flag { width: 30px; height: 30px; }
 }

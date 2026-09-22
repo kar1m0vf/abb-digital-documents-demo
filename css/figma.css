@@ -46,7 +46,6 @@ dialog.modal-document{width:100vw;max-width:none;height:100dvh;max-height:none;m
 .modal-document .paper h2{font-size:18px;line-height:25px}.modal-document .paper h3{font-size:16px;line-height:24px}.modal-document .paper th,.modal-document .paper td{background:#fff;border-color:#000}
 .modal-document .modal-footer{max-width:968px;margin:44px auto 0;justify-content:center;position:relative}
 .modal-document .modal-footer>.btn{width:min(441px,100%);min-height:55px;border-radius:10px;padding:10px;font-size:20px;font-weight:500}
-.document-tools{display:flex;justify-content:center;gap:12px;width:100%;margin-top:8px}.document-tools .btn{font-size:14px;min-height:40px;padding:8px 12px}
 @media(max-width:760px){dialog.modal-document{padding:24px 12px}.modal-document .paper{padding:30px 18px;min-height:600px;font-size:12px}.modal-document .paper h2{font-size:16px}.modal-document .paper h3{font-size:14px}.modal-document .modal-footer{margin-top:24px}.modal-document .modal-footer>.btn{font-size:17px}}
 @media print{dialog.modal-document{padding:0;background:#fff}.modal-document .paper{width:100%;min-height:0;margin:0;padding:12mm;font-size:10pt}.modal-document .modal-footer{display:none}}
 /* Final measured adjustments. */
@@ -61,6 +60,19 @@ dialog.modal-document{width:100vw;max-width:none;height:100dvh;max-height:none;m
 .document-thumbnail .paper th,.document-thumbnail .paper td{background:#fff;border-color:#000;padding:3px;font-weight:400}
 .document-thumbnail>div{height:100%;display:flex;align-items:center}
 .document-thumbnail:after{display:none}
+.paper-letter{font-family:Arial,sans-serif;color:#000;line-height:1.85}
+.modal-document .paper-letter{padding-right:100px}
+.paper-letter .letter-recipient{margin:0 0 34px;text-align:right;font-weight:700;line-height:1.4}
+.paper-letter .letter-intro{margin:0 0 30px;line-height:1.85}
+.paper-letter .letter-account-table{width:100%;margin:0 0 22px;border-collapse:collapse;font-size:inherit;line-height:1.12}
+.paper-letter .letter-account-table th,.paper-letter .letter-account-table td{padding:2px 5px;border:2px solid #000;background:#fff;color:#000;font-weight:400;text-align:left;vertical-align:top}
+.paper-letter .letter-account-table th{width:31%}
+.paper-letter .paper-transactions{margin:4px 0 22px;font-size:.9em}
+.paper-letter .letter-exchange{margin:0 0 8px}
+.paper-letter .letter-privacy{margin:0 0 24px;text-indent:18px}
+.paper-letter .letter-signoff{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding:0 6px;font-weight:700;line-height:1.85}
+.paper-letter .letter-signoff strong:last-child{text-align:right}
+@media(max-width:760px){.modal-document .paper-letter{padding-right:18px}.paper-letter .letter-signoff{gap:12px;font-size:.9em}.paper-letter .letter-account-table th,.paper-letter .letter-account-table td{padding:2px 3px}}
 dialog.fin-modal{border-radius:30px}.fin-modal .help-dot{width:40px;height:40px;font-size:20px}.fin-modal .modal-heading h2{font-size:22px;font-weight:600}.fin-modal .modal-body>p:first-child{font-size:16px;line-height:20px;color:#555;text-align:center}.fin-modal .modal-heading .icon-button{background:transparent;color:#999;width:32px;height:32px}.fin-caption{color:var(--blue);font-weight:500}
 dialog.phone-modal{width:min(640px,calc(100% - 32px));padding:30px 40px 65px;border-radius:30px}.phone-modal .modal-heading{justify-content:center;text-align:center;margin-top:30px}.phone-modal .modal-heading h2{font-size:25px;line-height:30px}.phone-modal .modal-heading .icon-button{display:none}.phone-modal .modal-body{font-size:20px;line-height:24px;color:#646464;font-weight:600}.phone-modal .help-list{padding:0;list-style:none;counter-reset:help;margin:30px 0 90px}.phone-modal .help-list li{counter-increment:help;display:flex;gap:10px;align-items:center;min-height:71px;border-color:#646464;padding:16px 0}.phone-modal .help-list li:before{content:counter(help);display:grid;place-items:center;width:30px;height:30px;flex:none;border-radius:50%;background:#e6f1ff;color:#0d63e0}.phone-modal .modal-footer .btn{width:100%}.phone-modal .phone-attention{display:block;margin:5px auto 0;width:64px;height:64px}
 .dashboard-header{height:64px}.dashboard-header h1{font-size:16px;line-height:24px}.dashboard-header p{font-size:12px;line-height:16px;margin:0}.search-box{height:58px;border:1px solid #a2a2a2;border-radius:16px}.search-box input::placeholder{font-size:11px;letter-spacing:1.4px}.stats-grid{gap:16px}.stat-card{padding:20px;min-height:110.5px;gap:16px}.stat-symbol{width:40px;height:40px}.stat-value{font-size:24px;line-height:32px}.stat-caption{margin-top:4px}.table-tab{padding:6px 14px;line-height:16px}.table-tabs{gap:4px}.table-toolbar{height:60px}.table-footer{min-height:65px}.inquiries-table{table-layout:fixed;min-width:920px}.inquiries-table th:nth-child(1){width:17.3%}.inquiries-table th:nth-child(2){width:22.9%}.inquiries-table th:nth-child(3){width:18.1%}.inquiries-table th:nth-child(4){width:16.9%}.inquiries-table th:nth-child(5){width:12.5%}.inquiries-table th:nth-child(6){width:12.3%;text-align:right}.inquiries-table td:last-child{text-align:right}.inquiries-table td{padding:14px 24px}.inquiries-table .status-select{font-size:12px;padding:4px 24px 4px 12px;max-width:126px}.sidebar-bottom .avatar{width:32px;height:32px;background:#2b7fff;font-size:12px}.sidebar-bottom .row{font-size:12px}.sidebar-bottom small{font-size:12px}.sidebar-item{padding:10px 12px;font-size:14px}.sidebar-nav{padding-top:20px}.sidebar-brand{font-size:14px}

@@ -60,7 +60,7 @@ function springFrames(duration, stiffness, damping, project) {
 // Figma exposes GENTLE + 1022.093773 ms, but omits its physical constants.
 // 100/15 is a gentle spring approximation; see MOTION.md for this limitation.
 export function showCardBack(back) {
-  const image = document.querySelector('.payment-card-back');
+  const image = document.querySelector('.payment-card-back-face');
   if (!image || image.dataset.back === String(back)) return;
   const from = Number(getComputedStyle(image).opacity);
   image.dataset.back = String(back);

@@ -6,7 +6,7 @@ import { accountSelection, details } from './views/accounts.js';
 import { review, payment, confirmation } from './views/checkout.js';
 import { dashboard, stats, inquiryTable, filteredRows } from './views/dashboard.js';
 import { ordersView, productsView } from './views/orders.js';
-import { openModal, closeModal, showDocument, getCurrentDocument, toast, finHelp, phoneHelp } from './modal.js';
+import { openModal, closeModal, showDocument, toast, finHelp, phoneHelp } from './modal.js';
 import { requestOtp, verifyOtp, submitOrder, DEMO } from './services/api.js';
 import { cleanCode, validFin, validOtp, validRange, validCard, validExpiry, escapeHtml as esc, icon } from './utils.js';
 
@@ -90,7 +90,7 @@ function back(){
   if(state.step>1&&state.step<7)transition(state.step-1);
 }
 const codeValue=name=>Array.from(main.querySelectorAll(`[data-code="${name}"] input`)).map(el=>el.value).join('');
-async function handleFin(){const value=codeValue('fin');if(!validFin(value)){setError('FİN kodunu tam daxil edin: 7 hərf və rəqəm.',main.querySelector('[data-code] input'));return;}clearError();setBusy(true);
+async function handleFin(){const value=codeValue('fin');if(!validFin(value)){setError('FİN kodunu tam daxil edin: 7 simvol (hərf və rəqəm).',main.querySelector('[data-code] input'));return;}clearError();setBusy(true);
   try{const challenge=await requestOtp(value);lastFin=value;state.challenge=challenge.id;state.otpDeadline=challenge.resendAt;setBusy(false);transition(2,'otp');main.querySelector('[data-code] input')?.focus();}
   catch(e){setBusy(false);setError(e.message,main.querySelector('[data-code] input'));}
 }
@@ -107,7 +107,7 @@ async function pay(){
   if(!/^\d{3}$/.test(cvv.value)){setError('3 rəqəmli CVV kodunu daxil edin.',cvv);return;}
   const value=number.value.replace(/\s/g,'');
   if(![DEMO.card,DEMO.declinedCard].map(v=>v.replace(/\s/g,'')).includes(value)){setError('Bu kartla ödəniş mümkün deyil. Digər kartdan istifadə edin.',number);return;}
-  const token=value.endsWith('0002')?'demo-declined':'demo-success';cvv.value='';setBusy(true);
+  const token=value.endsWith('0002')?'demo-declined':'demo-success';cvv.value='';updateCardPreview();setBusy(true);
   try{const order=await submitOrder(state.draft,token,paymentKey);saveOrder(order);state.order=order;setBusy(false);transition(7);if(storageFailed())toast('Sifariş bu sessiyada saxlanıldı. Brauzerin daimi yaddaşı əlçatan deyil.');}
   catch(e){setBusy(false);setError(e.message);}
 }
@@ -128,8 +128,6 @@ document.addEventListener('click',async event=>{
     case 'menu':{const nav=document.querySelector('#main-nav');const open=nav.classList.toggle('open');actionEl.setAttribute('aria-expanded',String(open));break;}
     case 'fin-help':finHelp();break;case 'phone-help':phoneHelp();break;case 'close-modal':closeModal();break;
     case 'preview':showDocument(state.draft);break;case 'preview-order':showDocument(state.order);break;
-    case 'print':window.print();break;
-    case 'download-pdf':{actionEl.disabled=true;try{const {downloadPdf}=await import('./services/pdf.js');await downloadPdf(getCurrentDocument());toast('PDF faylı hazırdır.');}catch{toast('PDF yüklənmədi. «Çap et» ilə PDF kimi saxlaya bilərsiniz.');}finally{actionEl.disabled=false;}break;}
     case 'balances':state.showBalances=!state.showBalances;render();break;
     case 'orders':navigate('orders');break;case 'new-order':startNewOrder();break;case 'confirm-new':closeModal();beginNewOrder();break;
     case 'copy-order':try{await navigator.clipboard.writeText(state.order.id);toast('Sənəd nömrəsi kopyalandı.');}catch{openModal('Sənəd nömrəsi',`<p>${esc(state.order.id)}</p>`);}break;
@@ -154,10 +152,17 @@ main.addEventListener('input',event=>{
   }
   if(el.id==='inquiry-search'){state.query=el.value;state.page=1;refreshDashboard();return;}
   if(el.id==='recipient'){state.draft.recipient=el.value;invalidateReview();clearError();}
-  if(el.id==='card-number'){el.value=el.value.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim();clearError();}
-  if(el.id==='card-expiry'){const value=el.value.replace(/\D/g,'').slice(0,4);el.value=value.length>2?value.slice(0,2)+'/'+value.slice(2):value;clearError();}
-  if(el.id==='card-cvv'){el.value=el.value.replace(/\D/g,'').slice(0,3);clearError();}
+  if(el.id==='card-number'){el.value=el.value.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim();updateCardPreview();clearError();}
+  if(el.id==='card-expiry'){const value=el.value.replace(/\D/g,'').slice(0,4);el.value=value.length>2?value.slice(0,2)+'/'+value.slice(2):value;updateCardPreview();clearError();}
+  if(el.id==='card-cvv'){el.value=el.value.replace(/\D/g,'').slice(0,3);updateCardPreview();clearError();}
 });
+function updateCardPreview(){
+  const number=main.querySelector('#card-number'),expiry=main.querySelector('#card-expiry'),cvv=main.querySelector('#card-cvv');
+  if(!number||!expiry||!cvv)return;
+  main.querySelector('.payment-card-number').textContent=number.value;
+  main.querySelector('.payment-card-expiry').textContent=expiry.value;
+  main.querySelector('.payment-card-cvv').textContent=cvv.value;
+}
 main.addEventListener('focusin',event=>{if(['card-number','card-expiry','card-cvv'].includes(event.target.id))showCardBack(event.target.id==='card-cvv');});
 main.addEventListener('paste',event=>{const el=event.target;const group=el.closest('[data-code]');if(!group)return;event.preventDefault();const inputs=[...group.querySelectorAll('input')];const chars=cleanCode(event.clipboardData.getData('text'),group.dataset.code==='otp');const start=chars.length>=inputs.length?0:inputs.indexOf(el);for(let i=start;i<inputs.length;i++)inputs[i].value=chars[i-start]||'';inputs[Math.min(start+chars.length,inputs.length-1)].focus();clearError();});
 main.addEventListener('keydown',event=>{const el=event.target;
@@ -182,7 +187,7 @@ main.addEventListener('change',event=>{
     main.querySelectorAll('input[name="account"]').forEach(input=>{if(!accounts.find(account=>account.id===input.value)?.disabled)input.disabled=limitReached&&!input.checked;});
     clearError();
   }
-  else if(el.name==='reviewed'){state.draft.reviewed=el.checked;document.querySelector('.form-actions .btn-primary').disabled=!el.checked;clearError();}
+  else if(el.name==='reviewed'){state.draft.reviewed=el.checked;clearError();if(state.step===5&&el.checked)next();else document.querySelector('.form-actions .btn-primary').disabled=true;}
   else if(el.closest('[data-account-id]')){
     const card=el.closest('[data-account-id]');const d=accountDetail(card.dataset.accountId);
     if(el.dataset.detail){d[el.dataset.detail]=el.type==='checkbox'?el.checked:el.value;if(el.dataset.detail==='equivalent')revealEquivalent(card.querySelector('.equivalent-fields'),el.checked);}
