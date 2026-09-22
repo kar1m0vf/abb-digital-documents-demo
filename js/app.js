@@ -1,6 +1,6 @@
-import { documents, accounts, steps, embassies } from './data.js';
+import { documents, accounts, steps, embassies, MAX_SELECTED_ACCOUNTS } from './data.js';
 import { state, getOrders, getInquiries, saveOrder, updateStatus, accountDetail, selectedAccounts, invalidateReview, resetDraft, storageFailed } from './store.js';
-import { renderHeader, shell, notice, button } from './components.js';
+import { renderHeader, shell, stepper, notice, button } from './components.js';
 import { documentType, embassy, fin, otp } from './views/identity.js';
 import { accountSelection, details } from './views/accounts.js';
 import { review, payment, confirmation } from './views/checkout.js';
@@ -9,6 +9,9 @@ import { ordersView, productsView } from './views/orders.js';
 import { openModal, closeModal, showDocument, getCurrentDocument, toast, finHelp, phoneHelp } from './modal.js';
 import { requestOtp, verifyOtp, submitOrder, DEMO } from './services/api.js';
 import { cleanCode, validFin, validOtp, validRange, validCard, validExpiry, escapeHtml as esc, icon } from './utils.js';
+
+import { clearMotion, revealEquivalent, showCardBack, animateConfirmation } from './motion.js';
+import { closeSelect, installSelects } from './select.js';
 
 const main=document.querySelector('#main');const header=document.querySelector('#header');
 document.documentElement.dataset.inputModality='pointer';
@@ -22,6 +25,8 @@ const routes=new Set(['documents','orders','payments','accounts','cards','embass
 function render({focus=false}={}){
   const active=document.activeElement;
   const focusSelector=active?.id?`#${CSS.escape(active.id)}`:active?.name?`[name="${CSS.escape(active.name)}"]${active.type==='radio'?`[value="${CSS.escape(active.value)}"]`:''}`:active?.dataset.action?`[data-action="${CSS.escape(active.dataset.action)}"]`:null;
+  closeSelect();
+  clearMotion();
   clearInterval(timer);document.body.classList.toggle('embassy-mode',state.route==='embassy');
   header.innerHTML=renderHeader();document.documentElement.lang=state.route==='embassy'?'en':'az';
   document.title=state.route==='embassy'?'Embassy Inquiries — Presentation prototype':'Rəqəmsal Sənəd Sifarişi — Təqdimat prototipi';
@@ -36,6 +41,7 @@ function render({focus=false}={}){
     main.innerHTML=shell(content);
     if(state.step===2&&state.substep==='otp'){updateCountdown();timer=setInterval(updateCountdown,1000);}
   }
+  animateConfirmation(main);
   if(focus){main.querySelector('[data-view-heading]')?.focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
   else if(focusSelector)document.querySelector(focusSelector)?.focus({preventScroll:true});
 }
@@ -63,7 +69,7 @@ function next(){
     if(state.draft.destination==='other'&&!state.draft.recipient.trim()){setError('Qurumun adını daxil edin.',document.querySelector('#recipient'));return;}
     transition(state.authenticated?3:2,state.authenticated?'embassy':'fin');return;
   }
-  if(state.step===3){if(!state.draft.accounts.length){setError('Ən azı bir hesab və ya kart seçin.');return;}selectedAccounts().forEach(a=>{const d=accountDetail(a.id);if(d.equivalentCurrency===a.currency)d.equivalentCurrency=a.currency==='EUR'?'USD':'EUR';});transition(4);return;}
+  if(state.step===3){if(!state.draft.accounts.length){setError('Ən azı bir hesab və ya kart seçin.');return;}if(state.draft.accounts.length>MAX_SELECTED_ACCOUNTS){setError(`Ən çox ${MAX_SELECTED_ACCOUNTS} kart və ya hesab seçə bilərsiniz.`);return;}selectedAccounts().forEach(a=>{const d=accountDetail(a.id);if(d.equivalentCurrency===a.currency)d.equivalentCurrency=a.currency==='EUR'?'USD':'EUR';});transition(4);return;}
   if(state.step===4){
     if(state.substep==='destination'){
       if(state.draft.destination==='other'&&!state.draft.recipient.trim()){setError('Qurumun adını daxil edin.',document.querySelector('#recipient'));return;}
@@ -152,6 +158,7 @@ main.addEventListener('input',event=>{
   if(el.id==='card-expiry'){const value=el.value.replace(/\D/g,'').slice(0,4);el.value=value.length>2?value.slice(0,2)+'/'+value.slice(2):value;clearError();}
   if(el.id==='card-cvv'){el.value=el.value.replace(/\D/g,'').slice(0,3);clearError();}
 });
+main.addEventListener('focusin',event=>{if(['card-number','card-expiry','card-cvv'].includes(event.target.id))showCardBack(event.target.id==='card-cvv');});
 main.addEventListener('paste',event=>{const el=event.target;const group=el.closest('[data-code]');if(!group)return;event.preventDefault();const inputs=[...group.querySelectorAll('input')];const chars=cleanCode(event.clipboardData.getData('text'),group.dataset.code==='otp');const start=chars.length>=inputs.length?0:inputs.indexOf(el);for(let i=start;i<inputs.length;i++)inputs[i].value=chars[i-start]||'';inputs[Math.min(start+chars.length,inputs.length-1)].focus();clearError();});
 main.addEventListener('keydown',event=>{const el=event.target;
   if(event.key==='Enter'&&el.tagName==='INPUT'&&el.closest('form')&&!['checkbox','radio','date'].includes(el.type)){
@@ -163,25 +170,33 @@ main.addEventListener('keydown',event=>{const el=event.target;
 document.addEventListener('keydown',event=>{if(event.key==='Escape'){document.querySelector('#main-nav')?.classList.remove('open');document.querySelector('[data-action="menu"]')?.setAttribute('aria-expanded','false');}});
 main.addEventListener('change',event=>{
   const el=event.target;if(state.busy)return;
-  if(el.name==='document-type'){state.draft.type=el.value;if(el.value==='reference')state.draft.destination='embassy';invalidateReview();render();}
-  else if(el.name==='embassy'){state.draft.embassy=el.value;invalidateReview();}
+  if(el.name==='document-type'){state.draft.type=el.value;if(el.value==='reference')state.draft.destination='embassy';invalidateReview();const nextStepper=document.createElement('template');nextStepper.innerHTML=stepper();document.querySelector('.stepper').replaceWith(nextStepper.content.querySelector('.stepper'));document.querySelector('.wizard').dataset.document=el.value;}
   else if(el.name==='destination'){state.draft.destination=el.value;invalidateReview();render();}
   else if(el.name==='language'){state.draft.language=el.value;for(const detail of Object.values(state.draft.details))detail.language=el.value;invalidateReview();}
   else if(el.name==='account'){
     const a=accounts.find(a=>a.id===el.value);if(!a||a.disabled)return;
+    if(el.checked&&!state.draft.accounts.includes(a.id)&&state.draft.accounts.length>=MAX_SELECTED_ACCOUNTS){el.checked=false;setError(`Ən çox ${MAX_SELECTED_ACCOUNTS} kart və ya hesab seçə bilərsiniz.`);return;}
     state.draft.accounts=el.checked?[...new Set([...state.draft.accounts,a.id])]:state.draft.accounts.filter(id=>id!==a.id);
-    accountDetail(a.id);invalidateReview();document.querySelector('#selection-summary').textContent=`${state.draft.accounts.length} məhsul seçilib`;document.querySelector('.form-actions .btn-primary').disabled=!state.draft.accounts.length;clearError();
+    accountDetail(a.id);invalidateReview();document.querySelector('#selection-summary').textContent=`${state.draft.accounts.length}/${MAX_SELECTED_ACCOUNTS} məhsul seçilib`;document.querySelector('.form-actions .btn-primary').disabled=!state.draft.accounts.length;
+    const limitReached=state.draft.accounts.length>=MAX_SELECTED_ACCOUNTS;
+    main.querySelectorAll('input[name="account"]').forEach(input=>{if(!accounts.find(account=>account.id===input.value)?.disabled)input.disabled=limitReached&&!input.checked;});
+    clearError();
   }
   else if(el.name==='reviewed'){state.draft.reviewed=el.checked;document.querySelector('.form-actions .btn-primary').disabled=!el.checked;clearError();}
-  else if(el.id==='dashboard-embassy'){state.embassy=el.value;state.page=1;state.filter='all';state.query='';render();}
-  else if(el.dataset.statusId){updateStatus(el.dataset.statusId,el.value);refreshDashboard();toast('Status updated.');}
   else if(el.closest('[data-account-id]')){
     const card=el.closest('[data-account-id]');const d=accountDetail(card.dataset.accountId);
-    if(el.dataset.detail){d[el.dataset.detail]=el.type==='checkbox'?el.checked:el.value;if(el.dataset.detail==='equivalent')card.querySelector('.equivalent-fields').hidden=!el.checked;}
+    if(el.dataset.detail){d[el.dataset.detail]=el.type==='checkbox'?el.checked:el.value;if(el.dataset.detail==='equivalent')revealEquivalent(card.querySelector('.equivalent-fields'),el.checked);}
     else if(el.name.startsWith('detail-language-'))d.language=el.value;
     else if(el.name.startsWith('period-')){d.period=el.value;card.querySelector('.custom-dates').hidden=el.value!=='custom';}
     else if(el.name.startsWith('operation-'))d.operation=el.value;
     invalidateReview();clearError();
   }
 });
+main.addEventListener('figma-select-change', event => {
+  const {id,context,value}=event.detail;
+  if(id==='embassy'){state.draft.embassy=value;invalidateReview();}
+  else if(id==='dashboard-embassy'){state.embassy=value;state.page=1;state.filter='all';state.query='';render();}
+  else if(id.startsWith('status-')&&context){updateStatus(context,value);refreshDashboard();toast('Status updated.');}
+});
+installSelects();
 route();

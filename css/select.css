@@ -1,0 +1,38 @@
+/* Embassy list: Figma 57:1048 + 832:952, at a 1156 px desktop width. */
+.figma-select { position: relative; min-width: 0; }
+.figma-select-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid #d9d9d9; border-radius: 10px; background: #fff; color: #000; cursor: pointer; text-align: left; }
+.figma-select-trigger:hover { border-color: #0d63e0; }
+.figma-select-trigger:focus-visible { outline: 3px solid #8dbaff; outline-offset: 3px; }
+.figma-select-trigger img { flex: none; width: 13px; height: 8px; }
+.figma-select-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.figma-select--embassy .figma-select-trigger { height: 93px; padding: 15px 16px; border-color: #0d63e0; box-shadow: 0 1px 1px #0004; font: 600 25px/30px Inter, Arial, sans-serif; }
+.figma-select-list { inset: auto; margin: 0; padding: 20px 0 25px 12px; border: 1px solid #d9d9d9; border-radius: 0 0 40px 40px; background: #fff6; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 8px 22px #1b2a4626; overflow-y: auto; z-index: 200; }
+#embassy-options { height: 251px; padding-bottom: 19px; }
+.figma-select-list:not(:popover-open):not([hidden]) { position: fixed; }
+.figma-select-list[hidden] { display: none; }
+.figma-select-option { display: flex; align-items: center; width: 100%; min-height: 34px; padding: 5px 10px; margin: 0 0 10px; border: 0; border-radius: 8px; background: transparent; text-align: left; font: 600 20px/24px Inter, Arial, sans-serif; color: #000; cursor: pointer; }
+.figma-select-option:last-child { margin-bottom: 0; }
+.figma-select-option:hover,.figma-select-option.is-active { background: #e6f1ffcc; }
+.figma-select-option[aria-selected="true"] { color: #0d63e0; }
+.figma-select-list[id="embassy-options"] .figma-select-option[aria-selected="true"] { color: #000; }
+.figma-select--compact .figma-select-trigger { height: 40px; padding: 8px 12px; font-size: 13px; color: #172645; }
+.dashboard-header .figma-select { width: 180px; }
+.figma-select--compact .figma-select-option,.figma-select--status .figma-select-option { font-size: 13px; min-height: 30px; line-height: 20px; margin-bottom: 4px; }
+.figma-select-list:has(.figma-select-option:first-child:nth-last-child(4)) { border-radius: 10px; padding: 8px; background: #fffffff0; }
+.figma-select--status .figma-select-trigger { height: 29px; width: max-content; min-width: 116px; padding: 4px 10px; border: 0; border-radius: 999px; font-size: 12px; }
+.figma-select--status .figma-select-trigger img { width: 11px; }
+.figma-select--status .figma-select-trigger:focus-visible { outline-offset: 2px; }
+.equivalent-fields { border: 0; padding: 0; margin-top: 30px; }
+.currency-options { display: flex; flex-wrap: wrap; gap: 20px; }
+.currency-choice { display: inline-flex; width: 120px; height: 62px; justify-content: center; align-items: center; gap: 10px; padding: 10px; border-radius: 40px; background: #eff1f8; color: #59647a; font-size: 20px; font-weight: 600; cursor: pointer; }
+.currency-choice:has(input:checked) { border: 1px solid #0d63e0; background: #fff; color: #0d63e0; box-shadow: 0 2px 1px #0d63e040; }
+.currency-choice:has(input:focus-visible) { outline: 3px solid #8dbaff; outline-offset: 3px; }
+.currency-choice img { width: 40px; height: 40px; object-fit: contain; }
+@media (max-width: 760px) {
+  .figma-select--embassy .figma-select-trigger { height: 56px; padding: 10px 14px; font-size: 17px; }
+  .figma-select-list { border-radius: 0 0 22px 22px; padding: 12px 8px 14px; }
+  .figma-select-option { font-size: 16px; margin-bottom: 6px; }
+  .currency-options { gap: 10px; }
+  .currency-choice { width: calc(50% - 5px); font-size: 16px; height: 54px; }
+  .currency-choice img { width: 30px; height: 30px; }
+}

@@ -67,3 +67,15 @@ dialog.phone-modal{width:min(640px,calc(100% - 32px));padding:30px 40px 65px;bor
 @media(min-width:761px){.wizard[data-stage="5"] .intro{margin-bottom:30px}.wizard[data-stage="5"] .review-panel{padding-bottom:28px}.wizard[data-stage="5"]>.view>.form-actions{margin-top:32px}.wizard[data-stage="6"] .payment-section{margin-top:80px}}
 @media(max-width:760px){.dashboard-header{height:auto}.table-toolbar{height:auto}.stats-grid{gap:12px}.stat-card{padding:18px 12px;gap:10px}.stat-symbol{width:34px;height:34px}.sidebar-bottom .row{display:none}.phone-modal .modal-body{font-size:16px;line-height:24px}.phone-modal .help-list{margin-bottom:40px}.phone-modal .modal-heading h2{font-size:22px}.phone-modal .modal-heading{margin-top:20px}dialog.phone-modal{padding:25px 20px 30px}.sidebar-brand{font-size:13px}}
 
+/* Figma's product balance control is an eye icon without a visible label. */
+.balance-toggle{display:inline-grid;place-items:center;width:32px;height:28px;padding:0;border:0;background:transparent;color:#0d63e0;cursor:pointer}
+.balance-toggle .icon{width:26px;height:26px}
+.balance-toggle:focus-visible{outline:2px solid #0d63e0;outline-offset:3px;border-radius:5px}
+@media(min-width:761px){
+ .wizard[data-stage="4"] .intro{margin-bottom:18px}
+ .wizard[data-stage="4"] .stepper{margin-bottom:25px}
+ .wizard[data-stage="4"] .detail-card{padding-bottom:44px}
+ .wizard[data-stage="4"] .detail-card .language-options{max-width:725px}
+ .wizard[data-stage="4"] #details-form>.form-actions{margin-top:60px}
+}
+

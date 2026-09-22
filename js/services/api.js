@@ -2,7 +2,7 @@
  * No real FIN, OTP, card details or bank requests are sent by this prototype.
  * Payment accepts a demo token, never raw card data.
  */
-import { demoCustomer, documents } from '../data.js';
+import { demoCustomer, documents, MAX_SELECTED_ACCOUNTS } from '../data.js';
 import { validFin, validOtp } from '../utils.js';
 const delay = ms => new Promise(resolve=>setTimeout(resolve,ms));
 const challenges=new Map();const submissions=new Map();
@@ -28,7 +28,7 @@ export async function submitOrder(draft,paymentToken,idempotencyKey){
   const pending=(async()=>{
     await delay(800);
     if(paymentToken==='demo-declined')throw new Error('Ödəniş rədd edildi. Digər kart ilə yenidən cəhd edin.');
-    if(paymentToken!=='demo-success'||!snapshot.reviewed||!snapshot.accounts.length)throw new Error('Sifariş məlumatlarını yoxlayın.');
+    if(paymentToken!=='demo-success'||!snapshot.reviewed||!snapshot.accounts.length||snapshot.accounts.length>MAX_SELECTED_ACCOUNTS)throw new Error('Sifariş məlumatlarını yoxlayın.');
     return {...snapshot,id:`AR-${new Date().getFullYear()}-${crypto.randomUUID().slice(0,8).toUpperCase()}`,customer:demoCustomer.name,date:new Date().toISOString(),price:documents[snapshot.type].price,status:'pending',paymentStatus:'paid',seed:false};
   })();
   submissions.set(idempotencyKey,pending);

@@ -29,3 +29,7 @@ test('concurrent submissions are idempotent and declined payments can be retried
   await assert.rejects(()=>submitOrder(draft,'demo-declined',retry),/rədd edildi/);
   assert.equal((await submitOrder(draft,'demo-success',retry)).paymentStatus,'paid');
 });
+test('an order cannot contain more than three cards and accounts combined',async()=>{
+  const draft={type:'statement',accounts:['visa-azn','master-azn','account-azn','account-usd'],reviewed:true};
+  await assert.rejects(()=>submitOrder(draft,'demo-success',crypto.randomUUID()),/Sifariş məlumatlarını yoxlayın/);
+});

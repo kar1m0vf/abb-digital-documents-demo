@@ -4,12 +4,14 @@ export const documents = {
 };
 export const embassies = [
   { id: 'italy', name: 'İtalya səfirliyi', en: 'Embassy of Italy' },
-  { id: 'germany', name: 'Almaniya səfirliyi', en: 'Embassy of Germany' },
   { id: 'france', name: 'Fransa səfirliyi', en: 'Embassy of France' },
+  { id: 'usa', name: 'ABŞ səfirliyi', en: 'Embassy of the United States' },
+  { id: 'germany', name: 'Almaniya səfirliyi', en: 'Embassy of Germany' },
   { id: 'spain', name: 'İspaniya səfirliyi', en: 'Embassy of Spain' },
   { id: 'uk', name: 'Böyük Britaniya səfirliyi', en: 'British Embassy' }
 ];
 export const demoCustomer = { name: 'Aydan Əhədova', initials: 'AƏ', phone: '+994 50 *** ** 00' };
+export const MAX_SELECTED_ACCOUNTS = 3;
 export const accounts = [
   { id:'visa-azn', name:'Tam Visa', type:'card', currency:'AZN', last4:'7575', number:'AZ•• •••• •••• •••• •••• 7575', balance:2450.80, image:'card-visa.jpeg' },
   { id:'master-azn', name:'Tam Mastercard', type:'card', currency:'AZN', last4:'4581', number:'AZ•• •••• •••• •••• •••• 4581', balance:680.25, image:'card-mastercard.jpeg' },
