@@ -2,9 +2,9 @@ package az.abb.embassyflow.portal.service;
 
 import az.abb.embassyflow.common.exception.BusinessException;
 import az.abb.embassyflow.common.exception.ErrorCodes;
-import az.abb.embassyflow.embassy.dao.entity.PortalUser;
-import az.abb.embassyflow.embassy.dao.repository.PortalUserRepository;
+import az.abb.embassyflow.embassy.dto.response.PortalUserInfo;
 import az.abb.embassyflow.embassy.service.EmbassyService;
+import az.abb.embassyflow.embassy.service.PortalUserService;
 import az.abb.embassyflow.portal.dto.request.PortalLoginRequest;
 import az.abb.embassyflow.portal.dto.response.PortalLoginResponse;
 import org.springframework.http.HttpStatus;
@@ -16,23 +16,22 @@ public class PortalAuthService {
 
     private static final String TOKEN_TYPE = "Bearer";
 
-    private final PortalUserRepository portalUserRepository;
+    private final PortalUserService portalUserService;
     private final EmbassyService embassyService;
 
-    public PortalAuthService(PortalUserRepository portalUserRepository, EmbassyService embassyService) {
-        this.portalUserRepository = portalUserRepository;
+    public PortalAuthService(PortalUserService portalUserService, EmbassyService embassyService) {
+        this.portalUserService = portalUserService;
         this.embassyService = embassyService;
     }
 
     @Transactional(readOnly = true)
     public PortalLoginResponse login(PortalLoginRequest request) {
-        PortalUser user = portalUserRepository.findByUsernameAndActiveTrue(request.username())
-                .filter(u -> u.getPassword().equals(request.password()))
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCodes.INVALID_CREDENTIALS, "error.invalid_credentials", HttpStatus.UNAUTHORIZED));
+        PortalUserInfo user = portalUserService.authenticate(request.username(), request.password());
 
-        String embassyName = embassyService.findName(user.getEmbassyId()).orElse(null);
-        String token = "demo-portal-token-" + user.getId();
-        return new PortalLoginResponse(token, TOKEN_TYPE, embassyName, user.getFullName(), user.getRole());
+        String embassyName = user.embassyId() == null
+                ? null
+                : embassyService.findName(user.embassyId()).orElse(null);
+        String token = "demo-portal-token-" + user.id();
+        return new PortalLoginResponse(token, TOKEN_TYPE, embassyName, user.fullName(), user.role());
     }
 }

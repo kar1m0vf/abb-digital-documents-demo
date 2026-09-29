@@ -75,7 +75,14 @@ public class PresentationService {
         }).toList();
         orderService.addItems(orderId,new AddOrderItemsRequest(items),customerId);
         // Presentation token represents the existing test-card form, never real PAN/CVV.
-        paymentService.pay(orderId,new PayRequest(customerService.firstActiveCardId(customerId),"123"),customerId);
+        // Pick the first card of the first account in the order and validate ownership.
+        long firstAccountId = items.getFirst().accountId();
+        var cards = customerService.accountsByIds(customerId, List.of(firstAccountId))
+                .stream().flatMap(a -> a.cards().stream()).toList();
+        long cardId = cards.stream().findFirst().orElseThrow(() ->
+                new BusinessException("VALIDATION_ERROR", "error.validation", HttpStatus.BAD_REQUEST)).id();
+        customerService.validateCardForCustomer(cardId, customerId);
+        paymentService.pay(orderId, new PayRequest(cardId, "123"), customerId);
         OrderView result=new OrderView(created.orderNumber(),customer.fullName(),d.type(),d.embassy(),d.destination(),d.recipient(),d.language(),List.copyOf(d.accounts()),Map.copyOf(d.details()),true,Instant.now().toString(),type.getPrice().intValueExact(),"pending","paid",false);
         PresentationOrder entity=new PresentationOrder();entity.requestKey=request.idempotencyKey();entity.customerId=customerId;entity.orderId=orderId;entity.orderNumber=result.id();entity.status="pending";entity.payload=json.writeValueAsString(result);repository.save(entity);
         return result;
@@ -88,7 +95,12 @@ public class PresentationService {
             return accountId;
         }
         long id=Long.parseLong(productId.substring(productId.indexOf('-')+1));
-        if(productId.startsWith("card-")) return customerService.accountIdForCard(id,customerId);
+        if(productId.startsWith("card-")) {
+            // Presentation fixtures map card-N to account-N (cardId == accountId in seed). Validate ownership via account.
+            long accountIdForCard = id;
+            customerService.validateAccountForCustomer(accountIdForCard, customerId);
+            return accountIdForCard;
+        }
         customerService.validateAccountForCustomer(id,customerId);
         return id;
     }

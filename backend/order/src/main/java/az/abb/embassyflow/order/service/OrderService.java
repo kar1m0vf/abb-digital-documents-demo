@@ -64,6 +64,10 @@ public class OrderService {
                 .orElseThrow(() -> new BusinessException(
                         ErrorCodes.ORDER_NOT_FOUND, "error.order_not_found", HttpStatus.NOT_FOUND));
 
+        if (order.getStatus() != OrderStatus.CREATED) {
+            throw new BusinessException(ErrorCodes.CONFLICT, "error.conflict", HttpStatus.CONFLICT);
+        }
+
         if (order.getDocumentType() == DocumentType.EMBASSY_CERTIFICATE && request.embassyId() == null) {
             throw new BusinessException(
                     ErrorCodes.VALIDATION_ERROR, "error.embassy_required", HttpStatus.BAD_REQUEST);
@@ -96,8 +100,16 @@ public class OrderService {
                 .orElseThrow(() -> new BusinessException(
                         ErrorCodes.ORDER_NOT_FOUND, "error.order_not_found", HttpStatus.NOT_FOUND));
 
-        order.setCustomerId(customerId);
+        if (order.getCustomerId() != null && !order.getCustomerId().equals(customerId)) {
+            throw new BusinessException(ErrorCodes.CONFLICT, "error.conflict", HttpStatus.CONFLICT);
+        }
+
+        if (order.getStatus() != OrderStatus.CREATED && order.getStatus() != OrderStatus.OTP_VERIFIED) {
+            throw new BusinessException(ErrorCodes.CONFLICT, "error.conflict", HttpStatus.CONFLICT);
+        }
+
         if (order.getStatus() == OrderStatus.CREATED) {
+            order.setCustomerId(customerId);
             order.setStatus(OrderStatus.OTP_VERIFIED);
             order.addTimeline(TimelineStep.OTP_VERIFIED);
         }
@@ -130,7 +142,14 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public OrderSummaryResponse getOrder(Long orderId, Long authenticatedCustomerId) {
-        DocumentOrder order = requireOwnedOrder(orderId, authenticatedCustomerId);
+        DocumentOrder order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCodes.ORDER_NOT_FOUND, "error.order_not_found", HttpStatus.NOT_FOUND));
+
+        if (order.getStatus() != OrderStatus.CREATED || order.getCustomerId() != null) {
+            requireOwned(order, authenticatedCustomerId);
+        }
+
         String embassyName = order.getEmbassyId() == null
                 ? null
                 : embassyService.findName(order.getEmbassyId()).orElse(null);
@@ -145,12 +164,15 @@ public class OrderService {
         DocumentOrder order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCodes.ORDER_NOT_FOUND, "error.order_not_found", HttpStatus.NOT_FOUND));
+        requireOwned(order, authenticatedCustomerId);
+        return order;
+    }
 
+    private static void requireOwned(DocumentOrder order, Long authenticatedCustomerId) {
         if (authenticatedCustomerId == null || order.getCustomerId() == null
                 || !order.getCustomerId().equals(authenticatedCustomerId)) {
             throw new BusinessException(ErrorCodes.UNAUTHORIZED, "error.unauthorized", HttpStatus.UNAUTHORIZED);
         }
-        return order;
     }
 
     private static OrderItem toItem(OrderItemRequest request) {

@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-order-version
+      author: embassy-flow
+      changes:
+        - addColumn:
+            tableName: document_orders
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false

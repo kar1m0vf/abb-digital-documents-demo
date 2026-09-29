@@ -21,3 +21,7 @@ databaseChangeLog:
       file: db/changelog/010-notifications.yaml
   - include:
       file: db/changelog/011-notifications-seed.yaml
+  - include:
+      file: db/changelog/012-order-version.yaml
+  - include:
+      file: db/changelog/013-portal-delivered-seed.yaml

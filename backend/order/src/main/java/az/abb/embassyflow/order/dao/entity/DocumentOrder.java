@@ -15,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +53,10 @@ public class DocumentOrder extends AuditableEntity {
 
     @Column(name = "rejection_note", length = 500)
     private String rejectionNote;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderTimeline> timeline = new ArrayList<>();
@@ -141,6 +146,10 @@ public class DocumentOrder extends AuditableEntity {
 
     public void setRejectionNote(String rejectionNote) {
         this.rejectionNote = rejectionNote;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     public List<OrderTimeline> getTimeline() {

@@ -17,6 +17,7 @@ spring-security-test = { module = "org.springframework.security:spring-security-
 spring-web = { module = "org.springframework:spring-web" }
 spring-webmvc = { module = "org.springframework:spring-webmvc" }
 spring-context = { module = "org.springframework:spring-context" }
+spring-tx = { module = "org.springframework:spring-tx" }
 jakarta-servlet = { module = "jakarta.servlet:jakarta.servlet-api" }
 jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }

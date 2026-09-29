@@ -2,14 +2,11 @@ package az.abb.embassyflow.portal.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
-import az.abb.embassyflow.common.exception.BusinessException;
-import az.abb.embassyflow.common.exception.ErrorCodes;
-import az.abb.embassyflow.embassy.dao.entity.PortalUser;
-import az.abb.embassyflow.embassy.dao.repository.PortalUserRepository;
+import az.abb.embassyflow.embassy.dto.response.PortalUserInfo;
 import az.abb.embassyflow.embassy.service.EmbassyService;
+import az.abb.embassyflow.embassy.service.PortalUserService;
 import az.abb.embassyflow.portal.dto.request.PortalLoginRequest;
 import az.abb.embassyflow.portal.dto.response.PortalLoginResponse;
 import java.util.Optional;
@@ -18,14 +15,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class PortalAuthServiceTest {
 
     @Mock
-    private PortalUserRepository portalUserRepository;
+    private PortalUserService portalUserService;
 
     @Mock
     private EmbassyService embassyService;
@@ -33,21 +28,13 @@ class PortalAuthServiceTest {
     @InjectMocks
     private PortalAuthService portalAuthService;
 
-    private PortalUser user() {
-        PortalUser user = new PortalUser();
-        ReflectionTestUtils.setField(user, "id", 1L);
-        user.setEmbassyId(1L);
-        user.setUsername("admin@italy");
-        user.setPassword("demo1234");
-        user.setFullName("Aydan Əhadova");
-        user.setRole("ADMIN");
-        user.setActive(true);
-        return user;
+    private PortalUserInfo user() {
+        return new PortalUserInfo(1L, 1L, "Aydan Əhadova", "ADMIN");
     }
 
     @Test
     void login_successReturnsTokenAndEmbassy() {
-        when(portalUserRepository.findByUsernameAndActiveTrue("admin@italy")).thenReturn(Optional.of(user()));
+        when(portalUserService.authenticate("admin@italy", "demo1234")).thenReturn(user());
         when(embassyService.findName(1L)).thenReturn(Optional.of("İtaliya səfirliyi"));
 
         PortalLoginResponse response =
@@ -61,30 +48,8 @@ class PortalAuthServiceTest {
     }
 
     @Test
-    void login_wrongPassword_throwsInvalidCredentials() {
-        when(portalUserRepository.findByUsernameAndActiveTrue("admin@italy")).thenReturn(Optional.of(user()));
-
-        BusinessException ex = assertThrows(BusinessException.class,
-                () -> portalAuthService.login(new PortalLoginRequest("admin@italy", "wrong")));
-
-        assertEquals(ErrorCodes.INVALID_CREDENTIALS, ex.getCode());
-        assertEquals(HttpStatus.UNAUTHORIZED, ex.getHttpStatus());
-    }
-
-    @Test
-    void login_unknownUser_throwsInvalidCredentials() {
-        when(portalUserRepository.findByUsernameAndActiveTrue("admin@italy")).thenReturn(Optional.empty());
-
-        BusinessException ex = assertThrows(BusinessException.class,
-                () -> portalAuthService.login(new PortalLoginRequest("admin@italy", "demo1234")));
-
-        assertEquals(ErrorCodes.INVALID_CREDENTIALS, ex.getCode());
-        assertEquals(HttpStatus.UNAUTHORIZED, ex.getHttpStatus());
-    }
-
-    @Test
     void login_missingEmbassyName_isNullSafe() {
-        when(portalUserRepository.findByUsernameAndActiveTrue("admin@italy")).thenReturn(Optional.of(user()));
+        when(portalUserService.authenticate("admin@italy", "demo1234")).thenReturn(user());
         when(embassyService.findName(1L)).thenReturn(Optional.empty());
 
         PortalLoginResponse response =

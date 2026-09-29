@@ -80,7 +80,9 @@ public class PaymentService {
             throw new BusinessException(ErrorCodes.UNAUTHORIZED, "error.unauthorized", HttpStatus.UNAUTHORIZED);
         }
 
-        Pageable pageable = PageRequest.of(page, size,
+        int safePage = Math.max(0, page);
+        int pageSize = Math.max(1, Math.min(size, 100));
+        Pageable pageable = PageRequest.of(safePage, pageSize,
                 Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id")));
 
         List<Long> orderIds = orderRepository.findByCustomerIdOrderByIdDesc(customerId).stream()
