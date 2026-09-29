@@ -1,0 +1,152 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-customers
+      author: embassy-flow
+      changes:
+        - createTable:
+            tableName: customers
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: fin
+                  type: VARCHAR(7)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: full_name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: phone
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: customer_otp
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: customer_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+              - column:
+                  name: verified
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: customer_otp
+            baseColumnNames: customer_id
+            constraintName: fk_customer_otp_customer
+            referencedTableName: customers
+            referencedColumnNames: id
+        - createIndex:
+            tableName: customer_otp
+            indexName: idx_customer_otp_customer_id
+            columns:
+              - column:
+                  name: customer_id
+        - insert:
+            tableName: customers
+            columns:
+              - column:
+                  name: fin
+                  value: "5D7X9Q2"
+              - column:
+                  name: full_name
+                  value: "Aydan Ahadova"
+              - column:
+                  name: phone
+                  value: "+994503304582"
+        - insert:
+            tableName: customers
+            columns:
+              - column:
+                  name: fin
+                  value: "6F8A1B3"
+              - column:
+                  name: full_name
+                  value: "Elvin Məmmədov"
+              - column:
+                  name: phone
+                  value: "+994553216780"
+        - insert:
+            tableName: customers
+            columns:
+              - column:
+                  name: fin
+                  value: "2K9C4D7"
+              - column:
+                  name: full_name
+                  value: "Nigar Əliyeva"
+              - column:
+                  name: phone
+                  value: "+994706658214"
+        - insert:
+            tableName: customers
+            columns:
+              - column:
+                  name: fin
+                  value: "7H2E5F1"
+              - column:
+                  name: full_name
+                  value: "Rəşad Quliyev"
+              - column:
+                  name: phone
+                  value: "+994507788341"
+        - insert:
+            tableName: customers
+            columns:
+              - column:
+                  name: fin
+                  value: "3J6T8G4"
+              - column:
+                  name: full_name
+                  value: "Leyla Hüseynova"
+              - column:
+                  name: phone
+                  value: "+994551234950"

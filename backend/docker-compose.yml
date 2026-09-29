@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: embassy-flow-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-embassy_flow}
+      POSTGRES_USER: ${DB_USER:-embassy}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-embassy_dev}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-embassy} -d ${DB_NAME:-embassy_flow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

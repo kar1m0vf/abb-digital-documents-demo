@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-notifications-seed
+      author: embassy-flow
+      changes:
+        - insert:
+            tableName: notifications
+            columns:
+              - column: { name: customer_id, valueNumeric: 1 }
+              - column: { name: title, value: "Sənəd hazırdır" }
+              - column:
+                  name: body
+                  value: "Sifarişiniz üzrə sənəd hazırlanıb: AR-2026-000512. Səfirliyə çatdırılıb."
+              - column: { name: is_read, valueBoolean: false }
+              - column: { name: created_at, value: "2026-09-18T11:05:00Z" }
+              - column: { name: updated_at, value: "2026-09-18T11:05:00Z" }
+        - insert:
+            tableName: notifications
+            columns:
+              - column: { name: customer_id, valueNumeric: 1 }
+              - column: { name: title, value: "ABB rəqəmsal arayış xidmətinə xoş gəldiniz" }
+              - column:
+                  name: body
+                  value: "İndi səfirliklərə arayışı tamamilə elektron şəkildə sifariş edə bilərsiniz."
+              - column: { name: is_read, valueBoolean: true }
+              - column: { name: created_at, value: "2026-09-17T09:00:00Z" }
+              - column: { name: updated_at, value: "2026-09-17T10:00:00Z" }

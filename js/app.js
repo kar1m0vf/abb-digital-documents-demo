@@ -7,7 +7,8 @@ import { review, payment, confirmation } from './views/checkout.js';
 import { dashboard, stats, inquiryTable, filteredRows } from './views/dashboard.js';
 import { ordersView, productsView } from './views/orders.js';
 import { openModal, closeModal, showDocument, toast, finHelp, phoneHelp } from './modal.js';
-import { requestOtp, verifyOtp, submitOrder, DEMO } from './services/api.js';
+import { requestOtp, verifyOtp, submitOrder, refreshOrders, logout, DEMO } from './services/api-client.js';
+import { backendEnabled } from './services/backend-state.js';
 import { cleanCode, validFin, validOtp, validRange, validCard, validExpiry, escapeHtml as esc, icon } from './utils.js';
 
 import { clearMotion, revealEquivalent, showCardBack, animateConfirmation } from './motion.js';
@@ -45,7 +46,16 @@ function render({focus=false}={}){
   if(focus){main.querySelector('[data-view-heading]')?.focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
   else if(focusSelector)document.querySelector(focusSelector)?.focus({preventScroll:true});
 }
-function route(){const value=location.hash.replace(/^#\//,'');state.route=routes.has(value)?value:'documents';state.error='';render({focus:true});}
+function route(){const value=location.hash.replace(/^#\//,'');const nextRoute=routes.has(value)?value:'documents';if(nextRoute!==state.route)state.showBalances=false;state.route=nextRoute;state.error='';render({focus:true});if(backendEnabled)syncOrders(true);}
+let syncingOrders=false;
+async function syncOrders(reportError=false){
+  if(syncingOrders||state.busy||document.querySelector('[role="combobox"][aria-expanded="true"]'))return;
+  syncingOrders=true;
+  const before=JSON.stringify(getOrders());
+  try{await refreshOrders();if(!state.busy&&before!==JSON.stringify(getOrders())){if(state.route==='embassy')refreshDashboard();else if(['orders','payments'].includes(state.route))render();}}
+  catch(error){if(reportError)toast(error.message);}
+  finally{syncingOrders=false;}
+}
 window.addEventListener('hashchange',route);
 window.addEventListener('storage',e=>{if(e.key?.startsWith('abb-bda-demo-')&&!state.busy){if(state.route==='embassy')refreshDashboard();else if(['orders','payments'].includes(state.route))render();}});
 function navigate(to){if(state.route===to){render({focus:true});}else location.hash=`/${to}`;}
@@ -91,7 +101,7 @@ function back(){
 }
 const codeValue=name=>Array.from(main.querySelectorAll(`[data-code="${name}"] input`)).map(el=>el.value).join('');
 async function handleFin(){const value=codeValue('fin');if(!validFin(value)){setError('FİN kodunu tam daxil edin: 7 simvol (hərf və rəqəm).',main.querySelector('[data-code] input'));return;}clearError();setBusy(true);
-  try{const challenge=await requestOtp(value);lastFin=value;state.challenge=challenge.id;state.otpDeadline=challenge.resendAt;setBusy(false);transition(2,'otp');main.querySelector('[data-code] input')?.focus();}
+  try{const challenge=await requestOtp(value);lastFin=value;state.challenge=challenge.id;state.otpDeadline=challenge.resendAt;state.otpPhone=challenge.phone;setBusy(false);transition(2,'otp');main.querySelector('[data-code] input')?.focus();}
   catch(e){setBusy(false);setError(e.message,main.querySelector('[data-code] input'));}
 }
 async function handleOtp(){const value=codeValue('otp');if(!validOtp(value)){setError('6 rəqəmli təsdiqləmə kodunu tam daxil edin.',main.querySelector('[data-code] input'));return;}clearError();setBusy(true);
@@ -134,7 +144,7 @@ document.addEventListener('click',async event=>{
     case 'notifications':{const orders=getOrders();openModal('Bildirişlər',orders.length?`<p>${orders.length} sifarişiniz var. Sənədlər və son statuslar «Sifarişlərim» bölməsindədir.</p>`:'<p class="muted">Hələ yeni bildiriş yoxdur.</p>',{footer:orders.length?button('Sifarişlərə bax','notification-orders'):''});break;}
     case 'notification-orders':closeModal();navigate('orders');break;
     case 'profile':openModal('Profil',`<div class="row"><span class="avatar">${state.customer.initials}</span><div><strong>${esc(state.customer.name)}</strong><p class="muted small">Şəxsi hesab</p></div></div>`,{footer:button('Hesabdan çıx','logout','secondary')});break;
-    case 'logout':closeModal();state.authenticated=false;state.customer=null;state.challenge=null;lastFin='';resetDraft();navigate('documents');toast('Hesabdan çıxdınız.');break;
+    case 'logout':closeModal();logout();state.authenticated=false;state.customer=null;state.challenge=null;state.otpPhone='';lastFin='';resetDraft();navigate('documents');toast('Hesabdan çıxdınız.');break;
     case 'filter':state.filter=actionEl.dataset.filter;state.page=1;refreshDashboard();break;
     case 'clear-filter':state.filter='all';state.query='';state.page=1;document.querySelector('#inquiry-search').value='';refreshDashboard();break;
     case 'page':state.page=Math.max(1,Math.min(Math.ceil(filteredRows().length/10),Number(actionEl.dataset.page)));refreshDashboard();break;
@@ -197,11 +207,16 @@ main.addEventListener('change',event=>{
     invalidateReview();clearError();
   }
 });
-main.addEventListener('figma-select-change', event => {
+main.addEventListener('figma-select-change', async event => {
+  if(state.busy)return;
   const {id,context,value}=event.detail;
   if(id==='embassy'){state.draft.embassy=value;invalidateReview();}
   else if(id==='dashboard-embassy'){state.embassy=value;state.page=1;state.filter='all';state.query='';render();}
-  else if(id.startsWith('status-')&&context){updateStatus(context,value);refreshDashboard();toast('Status updated.');}
+  else if(id.startsWith('status-')&&context){setBusy(true);try{await updateStatus(context,value);refreshDashboard();toast('Status updated.');}catch(error){refreshDashboard();toast(error.message);}finally{setBusy(false);}}
 });
 installSelects();
 route();
+if(backendEnabled){
+  setInterval(()=>{if(!document.hidden&&['orders','payments','embassy'].includes(state.route))syncOrders();},5000);
+  window.addEventListener('focus',()=>syncOrders());
+}

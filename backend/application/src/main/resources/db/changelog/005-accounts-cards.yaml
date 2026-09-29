@@ -1,0 +1,262 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-accounts-cards
+      author: embassy-flow
+      changes:
+        - createTable:
+            tableName: accounts
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: customer_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: account_number
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: balance
+                  type: NUMERIC(18,2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: account_type
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: cards
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: masked_number
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: card_brand
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expiry
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: accounts
+            baseColumnNames: customer_id
+            constraintName: fk_accounts_customer
+            referencedTableName: customers
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: cards
+            baseColumnNames: account_id
+            constraintName: fk_cards_account
+            referencedTableName: accounts
+            referencedColumnNames: id
+        - createIndex:
+            tableName: accounts
+            indexName: idx_accounts_customer_id
+            columns:
+              - column:
+                  name: customer_id
+        - createIndex:
+            tableName: cards
+            indexName: idx_cards_account_id
+            columns:
+              - column:
+                  name: account_id
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, valueNumeric: 1 }
+              - column: { name: customer_id, valueNumeric: 1 }
+              - column: { name: account_number, value: "19473526745367352156" }
+              - column: { name: currency, value: "AZN" }
+              - column: { name: balance, valueNumeric: 12500.50 }
+              - column: { name: account_type, value: "CURRENT" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, valueNumeric: 2 }
+              - column: { name: customer_id, valueNumeric: 1 }
+              - column: { name: account_number, value: "19473526745367352157" }
+              - column: { name: currency, value: "USD" }
+              - column: { name: balance, valueNumeric: 3400.00 }
+              - column: { name: account_type, value: "CURRENT" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, valueNumeric: 3 }
+              - column: { name: customer_id, valueNumeric: 2 }
+              - column: { name: account_number, value: "19473526745367352158" }
+              - column: { name: currency, value: "AZN" }
+              - column: { name: balance, valueNumeric: 820.75 }
+              - column: { name: account_type, value: "SAVING" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, valueNumeric: 4 }
+              - column: { name: customer_id, valueNumeric: 3 }
+              - column: { name: account_number, value: "19473526745367352159" }
+              - column: { name: currency, value: "EUR" }
+              - column: { name: balance, valueNumeric: 2150.00 }
+              - column: { name: account_type, value: "CURRENT" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, valueNumeric: 5 }
+              - column: { name: customer_id, valueNumeric: 4 }
+              - column: { name: account_number, value: "19473526745367352160" }
+              - column: { name: currency, value: "AZN" }
+              - column: { name: balance, valueNumeric: -300.25 }
+              - column: { name: account_type, value: "CURRENT" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, valueNumeric: 6 }
+              - column: { name: customer_id, valueNumeric: 5 }
+              - column: { name: account_number, value: "19473526745367352161" }
+              - column: { name: currency, value: "AZN" }
+              - column: { name: balance, valueNumeric: 9999.99 }
+              - column: { name: account_type, value: "SAVING" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, valueNumeric: 7 }
+              - column: { name: customer_id, valueNumeric: 1 }
+              - column: { name: account_number, value: "19473526745367352162" }
+              - column: { name: currency, value: "AZN" }
+              - column: { name: balance, valueNumeric: 0.00 }
+              - column: { name: account_type, value: "SAVING" }
+              - column: { name: active, valueBoolean: false }
+        - insert:
+            tableName: cards
+            columns:
+              - column: { name: id, valueNumeric: 1 }
+              - column: { name: account_id, valueNumeric: 1 }
+              - column: { name: masked_number, value: "7812 **** **** 4581" }
+              - column: { name: card_brand, value: "VISA" }
+              - column: { name: expiry, value: "05/26" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: cards
+            columns:
+              - column: { name: id, valueNumeric: 2 }
+              - column: { name: account_id, valueNumeric: 2 }
+              - column: { name: masked_number, value: "5412 **** **** 7788" }
+              - column: { name: card_brand, value: "MASTERCARD" }
+              - column: { name: expiry, value: "09/25" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: cards
+            columns:
+              - column: { name: id, valueNumeric: 3 }
+              - column: { name: account_id, valueNumeric: 3 }
+              - column: { name: masked_number, value: "4169 **** **** 3321" }
+              - column: { name: card_brand, value: "VISA" }
+              - column: { name: expiry, value: "11/26" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: cards
+            columns:
+              - column: { name: id, valueNumeric: 4 }
+              - column: { name: account_id, valueNumeric: 4 }
+              - column: { name: masked_number, value: "5525 **** **** 9014" }
+              - column: { name: card_brand, value: "MASTERCARD" }
+              - column: { name: expiry, value: "03/26" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: cards
+            columns:
+              - column: { name: id, valueNumeric: 5 }
+              - column: { name: account_id, valueNumeric: 5 }
+              - column: { name: masked_number, value: "4021 **** **** 6642" }
+              - column: { name: card_brand, value: "VISA" }
+              - column: { name: expiry, value: "07/25" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: cards
+            columns:
+              - column: { name: id, valueNumeric: 6 }
+              - column: { name: account_id, valueNumeric: 1 }
+              - column: { name: masked_number, value: "7812 **** **** 0000" }
+              - column: { name: card_brand, value: "VISA" }
+              - column: { name: expiry, value: "01/20" }
+              - column: { name: active, valueBoolean: false }
+        - sql:
+            dbms: postgresql
+            sql: ALTER SEQUENCE accounts_id_seq RESTART WITH 8
+        - sql:
+            dbms: postgresql
+            sql: ALTER SEQUENCE cards_id_seq RESTART WITH 7

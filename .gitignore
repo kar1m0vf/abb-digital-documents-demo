@@ -1,0 +1,9 @@
+node_modules/
+.playwright-cli/
+.vscode/
+backend/.gradle/
+backend/.gradle-cache/
+backend/**/build/
+backend/data/
+*.log
+.env

@@ -1,0 +1,698 @@
+databaseChangeLog:
+  # --- Portal üçün əlavə kolon ---
+  - changeSet:
+      id: 009a-document-rejection-note
+      author: embassy-flow
+      changes:
+        - addColumn:
+            tableName: document_orders
+            columns:
+              - column:
+                  name: rejection_note
+                  type: VARCHAR(500)
+
+  # --- Portal istifadəçiləri (T10.1, API.md #15) ---
+  - changeSet:
+      id: 009b-portal-users
+      author: embassy-flow
+      changes:
+        - createTable:
+            tableName: portal_users
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: embassy_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: username
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: password
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: full_name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: portal_users
+            baseColumnNames: embassy_id
+            constraintName: fk_portal_users_embassy
+            referencedTableName: embassies
+            referencedColumnNames: id
+        - insert:
+            tableName: portal_users
+            columns:
+              - column: { name: id, valueNumeric: 1 }
+              - column: { name: embassy_id, valueNumeric: 1 }
+              - column: { name: username, value: "admin@italy" }
+              - column: { name: password, value: "demo1234" }
+              - column: { name: full_name, value: "Aydan Əhadova" }
+              - column: { name: role, value: "ADMIN" }
+              - column: { name: active, valueBoolean: true }
+        - sql:
+            dbms: postgresql
+            sql: ALTER SEQUENCE portal_users_id_seq RESTART WITH 2
+
+  # --- Əlavə demo müştərilər (Figma portal cədvəli — 10 sıra) ---
+  - changeSet:
+      id: 009c-extra-customers
+      author: embassy-flow
+      changes:
+        - insert:
+            tableName: customers
+            columns:
+              - column: { name: fin, value: "8K4P6S2" }
+              - column: { name: full_name, value: "Tural Hüseynov" }
+              - column: { name: phone, value: "+994502228811" }
+        - insert:
+            tableName: customers
+            columns:
+              - column: { name: fin, value: "9M2R7T4" }
+              - column: { name: full_name, value: "Samir Nəsirov" }
+              - column: { name: phone, value: "+994505551122" }
+        - insert:
+            tableName: customers
+            columns:
+              - column: { name: fin, value: "4N6Q9W1" }
+              - column: { name: full_name, value: "Fidan Abbasova" }
+              - column: { name: phone, value: "+994553334455" }
+        - insert:
+            tableName: customers
+            columns:
+              - column: { name: fin, value: "1L5H3J8" }
+              - column: { name: full_name, value: "Orxan Qəhrəmanov" }
+              - column: { name: phone, value: "+994707776677" }
+        - insert:
+            tableName: customers
+            columns:
+              - column: { name: fin, value: "7Z2C5V9" }
+              - column: { name: full_name, value: "Günay Məmmədli" }
+              - column: { name: phone, value: "+994518889900" }
+
+  # --- Yeni müştərilər üçün hesablar (portal detail item-ləri üçün) ---
+  - changeSet:
+      id: 009d-extra-accounts
+      author: embassy-flow
+      changes:
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, valueNumeric: 8 }
+              - column: { name: customer_id, valueNumeric: 6 }
+              - column: { name: account_number, value: "19473526745367352163" }
+              - column: { name: currency, value: "AZN" }
+              - column: { name: balance, valueNumeric: 4520.10 }
+              - column: { name: account_type, value: "SAVING" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, valueNumeric: 9 }
+              - column: { name: customer_id, valueNumeric: 7 }
+              - column: { name: account_number, value: "19473526745367352164" }
+              - column: { name: currency, value: "AZN" }
+              - column: { name: balance, valueNumeric: 3100.00 }
+              - column: { name: account_type, value: "CURRENT" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, valueNumeric: 10 }
+              - column: { name: customer_id, valueNumeric: 8 }
+              - column: { name: account_number, value: "19473526745367352165" }
+              - column: { name: currency, value: "AZN" }
+              - column: { name: balance, valueNumeric: 7800.55 }
+              - column: { name: account_type, value: "CURRENT" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, valueNumeric: 11 }
+              - column: { name: customer_id, valueNumeric: 9 }
+              - column: { name: account_number, value: "19473526745367352166" }
+              - column: { name: currency, value: "AZN" }
+              - column: { name: balance, valueNumeric: 990.25 }
+              - column: { name: account_type, value: "CURRENT" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, valueNumeric: 12 }
+              - column: { name: customer_id, valueNumeric: 10 }
+              - column: { name: account_number, value: "19473526745367352167" }
+              - column: { name: currency, value: "AZN" }
+              - column: { name: balance, valueNumeric: 6050.40 }
+              - column: { name: account_type, value: "SAVING" }
+              - column: { name: active, valueBoolean: true }
+        - sql:
+            dbms: postgresql
+            sql: ALTER SEQUENCE accounts_id_seq RESTART WITH 13
+
+  # --- Nümunə sənədlər (İtaliya səfirliyi üçün, statuslar qarışıq) ---
+  - changeSet:
+      id: 009e-sample-orders
+      author: embassy-flow
+      changes:
+        - insert:
+            tableName: document_orders
+            columns:
+              - column: { name: id, valueNumeric: 101 }
+              - column: { name: document_type, value: "ACCOUNT_STATEMENT" }
+              - column: { name: language, value: "AZ" }
+              - column: { name: status, value: "COMPLETED" }
+              - column: { name: order_number, value: "AR-2026-000512" }
+              - column: { name: embassy_id, valueNumeric: 1 }
+              - column: { name: customer_id, valueNumeric: 1 }
+              - column: { name: verification_code, value: "FA7K2Q" }
+              - column: { name: created_at, value: "2026-09-18T10:00:00Z" }
+              - column: { name: updated_at, value: "2026-09-18T11:00:00Z" }
+        - insert:
+            tableName: document_orders
+            columns:
+              - column: { name: id, valueNumeric: 102 }
+              - column: { name: document_type, value: "ACCOUNT_STATEMENT" }
+              - column: { name: language, value: "AZ" }
+              - column: { name: status, value: "PAYMENT_RECEIVED" }
+              - column: { name: order_number, value: "AR-2026-000489" }
+              - column: { name: embassy_id, valueNumeric: 1 }
+              - column: { name: customer_id, valueNumeric: 2 }
+              - column: { name: verification_code, value: "X9RT4M" }
+              - column: { name: created_at, value: "2026-09-17T09:30:00Z" }
+              - column: { name: updated_at, value: "2026-09-17T09:42:00Z" }
+        - insert:
+            tableName: document_orders
+            columns:
+              - column: { name: id, valueNumeric: 103 }
+              - column: { name: document_type, value: "ACCOUNT_STATEMENT" }
+              - column: { name: language, value: "EN" }
+              - column: { name: status, value: "PAYMENT_RECEIVED" }
+              - column: { name: order_number, value: "AR-2026-000471" }
+              - column: { name: embassy_id, valueNumeric: 1 }
+              - column: { name: customer_id, valueNumeric: 6 }
+              - column: { name: verification_code, value: "QP3NW7" }
+              - column: { name: created_at, value: "2026-09-16T14:20:00Z" }
+              - column: { name: updated_at, value: "2026-09-16T14:31:00Z" }
+        - insert:
+            tableName: document_orders
+            columns:
+              - column: { name: id, valueNumeric: 104 }
+              - column: { name: document_type, value: "ACCOUNT_STATEMENT" }
+              - column: { name: language, value: "AZ" }
+              - column: { name: status, value: "COMPLETED" }
+              - column: { name: order_number, value: "AR-2026-000125" }
+              - column: { name: embassy_id, valueNumeric: 1 }
+              - column: { name: customer_id, valueNumeric: 3 }
+              - column: { name: verification_code, value: "K2JD8V" }
+              - column: { name: created_at, value: "2026-09-15T08:45:00Z" }
+              - column: { name: updated_at, value: "2026-09-15T09:40:00Z" }
+        - insert:
+            tableName: document_orders
+            columns:
+              - column: { name: id, valueNumeric: 105 }
+              - column: { name: document_type, value: "ACCOUNT_STATEMENT" }
+              - column: { name: language, value: "AZ" }
+              - column: { name: status, value: "REJECTED" }
+              - column: { name: order_number, value: "AR-2026-000124" }
+              - column: { name: embassy_id, valueNumeric: 1 }
+              - column: { name: customer_id, valueNumeric: 4 }
+              - column: { name: verification_code, value: "M5TB4X" }
+              - column: { name: rejection_note, value: "Sənəddəki məlumatlar yanlışdır" }
+              - column: { name: created_at, value: "2026-09-13T11:10:00Z" }
+              - column: { name: updated_at, value: "2026-09-13T13:00:00Z" }
+        - insert:
+            tableName: document_orders
+            columns:
+              - column: { name: id, valueNumeric: 106 }
+              - column: { name: document_type, value: "ACCOUNT_STATEMENT" }
+              - column: { name: language, value: "AZ" }
+              - column: { name: status, value: "COMPLETED" }
+              - column: { name: order_number, value: "AR-2026-000118" }
+              - column: { name: embassy_id, valueNumeric: 1 }
+              - column: { name: customer_id, valueNumeric: 5 }
+              - column: { name: verification_code, value: "L7YD2C" }
+              - column: { name: created_at, value: "2026-09-12T15:00:00Z" }
+              - column: { name: updated_at, value: "2026-09-12T16:10:00Z" }
+        - insert:
+            tableName: document_orders
+            columns:
+              - column: { name: id, valueNumeric: 107 }
+              - column: { name: document_type, value: "ACCOUNT_STATEMENT" }
+              - column: { name: language, value: "AZ" }
+              - column: { name: status, value: "OTP_VERIFIED" }
+              - column: { name: order_number, value: "AR-2026-000103" }
+              - column: { name: embassy_id, valueNumeric: 1 }
+              - column: { name: customer_id, valueNumeric: 7 }
+              - column: { name: verification_code, value: "B8ZN6R" }
+              - column: { name: created_at, value: "2026-09-11T12:40:00Z" }
+              - column: { name: updated_at, value: "2026-09-11T12:45:00Z" }
+        - insert:
+            tableName: document_orders
+            columns:
+              - column: { name: id, valueNumeric: 108 }
+              - column: { name: document_type, value: "EMBASSY_CERTIFICATE" }
+              - column: { name: language, value: "AZ" }
+              - column: { name: status, value: "COMPLETED" }
+              - column: { name: order_number, value: "AR-2026-000098" }
+              - column: { name: embassy_id, valueNumeric: 1 }
+              - column: { name: customer_id, valueNumeric: 8 }
+              - column: { name: verification_code, value: "T4HC3W" }
+              - column: { name: created_at, value: "2026-09-15T16:05:00Z" }
+              - column: { name: updated_at, value: "2026-09-15T17:15:00Z" }
+        - insert:
+            tableName: document_orders
+            columns:
+              - column: { name: id, valueNumeric: 109 }
+              - column: { name: document_type, value: "ACCOUNT_STATEMENT" }
+              - column: { name: language, value: "AZ" }
+              - column: { name: status, value: "REJECTED" }
+              - column: { name: order_number, value: "AR-2026-000091" }
+              - column: { name: embassy_id, valueNumeric: 1 }
+              - column: { name: customer_id, valueNumeric: 9 }
+              - column: { name: verification_code, value: "D2XP7G" }
+              - column: { name: rejection_note, value: "Tələblərə uyğun deyil" }
+              - column: { name: created_at, value: "2026-09-10T10:25:00Z" }
+              - column: { name: updated_at, value: "2026-09-10T12:00:00Z" }
+        - insert:
+            tableName: document_orders
+            columns:
+              - column: { name: id, valueNumeric: 110 }
+              - column: { name: document_type, value: "EMBASSY_CERTIFICATE" }
+              - column: { name: language, value: "EN" }
+              - column: { name: status, value: "PAYMENT_RECEIVED" }
+              - column: { name: order_number, value: "AR-2026-000087" }
+              - column: { name: embassy_id, valueNumeric: 1 }
+              - column: { name: customer_id, valueNumeric: 10 }
+              - column: { name: verification_code, value: "S6RV5N" }
+              - column: { name: created_at, value: "2026-09-09T13:15:00Z" }
+              - column: { name: updated_at, value: "2026-09-09T13:22:00Z" }
+        - sql:
+            dbms: postgresql
+            sql: ALTER SEQUENCE document_orders_id_seq RESTART WITH 111
+        - sql:
+            dbms: postgresql
+            sql: ALTER SEQUENCE order_no_seq RESTART WITH 513
+
+  # --- Timeline hadisələri (nümunə sənədlər üçün) ---
+  - changeSet:
+      id: 009f-sample-timeline
+      author: embassy-flow
+      changes:
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 101 }
+              - column: { name: step, value: "ORDER_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-18T10:00:00Z" }
+              - column: { name: updated_at, value: "2026-09-18T10:00:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 101 }
+              - column: { name: step, value: "OTP_VERIFIED" }
+              - column: { name: created_at, value: "2026-09-18T10:05:00Z" }
+              - column: { name: updated_at, value: "2026-09-18T10:05:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 101 }
+              - column: { name: step, value: "PAYMENT_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-18T10:10:00Z" }
+              - column: { name: updated_at, value: "2026-09-18T10:10:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 101 }
+              - column: { name: step, value: "ABB_APPROVED" }
+              - column: { name: created_at, value: "2026-09-18T10:20:00Z" }
+              - column: { name: updated_at, value: "2026-09-18T10:20:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 101 }
+              - column: { name: step, value: "DIGITALLY_SIGNED" }
+              - column: { name: created_at, value: "2026-09-18T10:25:00Z" }
+              - column: { name: updated_at, value: "2026-09-18T10:25:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 101 }
+              - column: { name: step, value: "DELIVERED_TO_EMBASSY" }
+              - column: { name: created_at, value: "2026-09-18T10:30:00Z" }
+              - column: { name: updated_at, value: "2026-09-18T10:30:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 101 }
+              - column: { name: step, value: "EMBASSY_REVIEWED" }
+              - column: { name: created_at, value: "2026-09-18T11:00:00Z" }
+              - column: { name: updated_at, value: "2026-09-18T11:00:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 102 }
+              - column: { name: step, value: "ORDER_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-17T09:30:00Z" }
+              - column: { name: updated_at, value: "2026-09-17T09:30:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 102 }
+              - column: { name: step, value: "OTP_VERIFIED" }
+              - column: { name: created_at, value: "2026-09-17T09:35:00Z" }
+              - column: { name: updated_at, value: "2026-09-17T09:35:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 102 }
+              - column: { name: step, value: "PAYMENT_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-17T09:42:00Z" }
+              - column: { name: updated_at, value: "2026-09-17T09:42:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 103 }
+              - column: { name: step, value: "ORDER_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-16T14:20:00Z" }
+              - column: { name: updated_at, value: "2026-09-16T14:20:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 103 }
+              - column: { name: step, value: "OTP_VERIFIED" }
+              - column: { name: created_at, value: "2026-09-16T14:26:00Z" }
+              - column: { name: updated_at, value: "2026-09-16T14:26:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 103 }
+              - column: { name: step, value: "PAYMENT_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-16T14:31:00Z" }
+              - column: { name: updated_at, value: "2026-09-16T14:31:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 104 }
+              - column: { name: step, value: "ORDER_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-15T08:45:00Z" }
+              - column: { name: updated_at, value: "2026-09-15T08:45:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 104 }
+              - column: { name: step, value: "OTP_VERIFIED" }
+              - column: { name: created_at, value: "2026-09-15T08:50:00Z" }
+              - column: { name: updated_at, value: "2026-09-15T08:50:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 104 }
+              - column: { name: step, value: "PAYMENT_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-15T08:55:00Z" }
+              - column: { name: updated_at, value: "2026-09-15T08:55:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 104 }
+              - column: { name: step, value: "EMBASSY_REVIEWED" }
+              - column: { name: created_at, value: "2026-09-15T09:40:00Z" }
+              - column: { name: updated_at, value: "2026-09-15T09:40:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 105 }
+              - column: { name: step, value: "ORDER_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-13T11:10:00Z" }
+              - column: { name: updated_at, value: "2026-09-13T11:10:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 105 }
+              - column: { name: step, value: "OTP_VERIFIED" }
+              - column: { name: created_at, value: "2026-09-13T11:15:00Z" }
+              - column: { name: updated_at, value: "2026-09-13T11:15:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 105 }
+              - column: { name: step, value: "PAYMENT_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-13T11:20:00Z" }
+              - column: { name: updated_at, value: "2026-09-13T11:20:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 105 }
+              - column: { name: step, value: "EMBASSY_REVIEWED" }
+              - column: { name: created_at, value: "2026-09-13T13:00:00Z" }
+              - column: { name: updated_at, value: "2026-09-13T13:00:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 106 }
+              - column: { name: step, value: "ORDER_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-12T15:00:00Z" }
+              - column: { name: updated_at, value: "2026-09-12T15:00:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 106 }
+              - column: { name: step, value: "OTP_VERIFIED" }
+              - column: { name: created_at, value: "2026-09-12T15:06:00Z" }
+              - column: { name: updated_at, value: "2026-09-12T15:06:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 106 }
+              - column: { name: step, value: "PAYMENT_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-12T15:12:00Z" }
+              - column: { name: updated_at, value: "2026-09-12T15:12:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 106 }
+              - column: { name: step, value: "EMBASSY_REVIEWED" }
+              - column: { name: created_at, value: "2026-09-12T16:10:00Z" }
+              - column: { name: updated_at, value: "2026-09-12T16:10:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 107 }
+              - column: { name: step, value: "ORDER_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-11T12:40:00Z" }
+              - column: { name: updated_at, value: "2026-09-11T12:40:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 107 }
+              - column: { name: step, value: "OTP_VERIFIED" }
+              - column: { name: created_at, value: "2026-09-11T12:45:00Z" }
+              - column: { name: updated_at, value: "2026-09-11T12:45:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 108 }
+              - column: { name: step, value: "ORDER_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-15T16:05:00Z" }
+              - column: { name: updated_at, value: "2026-09-15T16:05:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 108 }
+              - column: { name: step, value: "OTP_VERIFIED" }
+              - column: { name: created_at, value: "2026-09-15T16:10:00Z" }
+              - column: { name: updated_at, value: "2026-09-15T16:10:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 108 }
+              - column: { name: step, value: "PAYMENT_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-15T16:15:00Z" }
+              - column: { name: updated_at, value: "2026-09-15T16:15:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 108 }
+              - column: { name: step, value: "EMBASSY_REVIEWED" }
+              - column: { name: created_at, value: "2026-09-15T17:15:00Z" }
+              - column: { name: updated_at, value: "2026-09-15T17:15:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 109 }
+              - column: { name: step, value: "ORDER_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-10T10:25:00Z" }
+              - column: { name: updated_at, value: "2026-09-10T10:25:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 109 }
+              - column: { name: step, value: "OTP_VERIFIED" }
+              - column: { name: created_at, value: "2026-09-10T10:30:00Z" }
+              - column: { name: updated_at, value: "2026-09-10T10:30:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 109 }
+              - column: { name: step, value: "PAYMENT_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-10T10:35:00Z" }
+              - column: { name: updated_at, value: "2026-09-10T10:35:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 109 }
+              - column: { name: step, value: "EMBASSY_REVIEWED" }
+              - column: { name: created_at, value: "2026-09-10T12:00:00Z" }
+              - column: { name: updated_at, value: "2026-09-10T12:00:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 110 }
+              - column: { name: step, value: "ORDER_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-09T13:15:00Z" }
+              - column: { name: updated_at, value: "2026-09-09T13:15:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 110 }
+              - column: { name: step, value: "OTP_VERIFIED" }
+              - column: { name: created_at, value: "2026-09-09T13:19:00Z" }
+              - column: { name: updated_at, value: "2026-09-09T13:19:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 110 }
+              - column: { name: step, value: "PAYMENT_RECEIVED" }
+              - column: { name: created_at, value: "2026-09-09T13:22:00Z" }
+              - column: { name: updated_at, value: "2026-09-09T13:22:00Z" }
+
+  # --- Item-lər (nümunə sənədlər üçün) ---
+  - changeSet:
+      id: 009g-sample-items
+      author: embassy-flow
+      changes:
+        - insert:
+            tableName: order_items
+            columns:
+              - column: { name: order_id, valueNumeric: 101 }
+              - column: { name: account_id, valueNumeric: 1 }
+              - column: { name: language, value: "AZ" }
+              - column: { name: period, value: "3M" }
+              - column: { name: statement_type, value: "ALL" }
+              - column: { name: equivalent_currency, valueBoolean: false }
+        - insert:
+            tableName: order_items
+            columns:
+              - column: { name: order_id, valueNumeric: 102 }
+              - column: { name: account_id, valueNumeric: 3 }
+              - column: { name: language, value: "AZ" }
+              - column: { name: period, value: "3M" }
+              - column: { name: statement_type, value: "ALL" }
+              - column: { name: equivalent_currency, valueBoolean: false }
+        - insert:
+            tableName: order_items
+            columns:
+              - column: { name: order_id, valueNumeric: 103 }
+              - column: { name: account_id, valueNumeric: 8 }
+              - column: { name: language, value: "EN" }
+              - column: { name: period, value: "6M" }
+              - column: { name: statement_type, value: "ALL" }
+              - column: { name: equivalent_currency, valueBoolean: false }
+        - insert:
+            tableName: order_items
+            columns:
+              - column: { name: order_id, valueNumeric: 104 }
+              - column: { name: account_id, valueNumeric: 4 }
+              - column: { name: language, value: "AZ" }
+              - column: { name: period, value: "3M" }
+              - column: { name: statement_type, value: "ALL" }
+              - column: { name: equivalent_currency, valueBoolean: false }
+        - insert:
+            tableName: order_items
+            columns:
+              - column: { name: order_id, valueNumeric: 105 }
+              - column: { name: account_id, valueNumeric: 5 }
+              - column: { name: language, value: "AZ" }
+              - column: { name: period, value: "3M" }
+              - column: { name: statement_type, value: "ALL" }
+              - column: { name: equivalent_currency, valueBoolean: false }
+        - insert:
+            tableName: order_items
+            columns:
+              - column: { name: order_id, valueNumeric: 106 }
+              - column: { name: account_id, valueNumeric: 6 }
+              - column: { name: language, value: "AZ" }
+              - column: { name: period, value: "1Y" }
+              - column: { name: statement_type, value: "ALL" }
+              - column: { name: equivalent_currency, valueBoolean: true }
+        - insert:
+            tableName: order_items
+            columns:
+              - column: { name: order_id, valueNumeric: 107 }
+              - column: { name: account_id, valueNumeric: 9 }
+              - column: { name: language, value: "AZ" }
+              - column: { name: period, value: "3M" }
+              - column: { name: statement_type, value: "INCOME" }
+              - column: { name: equivalent_currency, valueBoolean: false }
+        - insert:
+            tableName: order_items
+            columns:
+              - column: { name: order_id, valueNumeric: 108 }
+              - column: { name: account_id, valueNumeric: 10 }
+              - column: { name: language, value: "AZ" }
+              - column: { name: period, value: "3M" }
+              - column: { name: statement_type, value: "ALL" }
+              - column: { name: equivalent_currency, valueBoolean: false }
+        - insert:
+            tableName: order_items
+            columns:
+              - column: { name: order_id, valueNumeric: 109 }
+              - column: { name: account_id, valueNumeric: 11 }
+              - column: { name: language, value: "AZ" }
+              - column: { name: period, value: "3M" }
+              - column: { name: statement_type, value: "ALL" }
+              - column: { name: equivalent_currency, valueBoolean: false }
+        - insert:
+            tableName: order_items
+            columns:
+              - column: { name: order_id, valueNumeric: 110 }
+              - column: { name: account_id, valueNumeric: 12 }
+              - column: { name: language, value: "EN" }
+              - column: { name: period, value: "6M" }
+              - column: { name: statement_type, value: "EXPENSE" }
+              - column: { name: equivalent_currency, valueBoolean: false }

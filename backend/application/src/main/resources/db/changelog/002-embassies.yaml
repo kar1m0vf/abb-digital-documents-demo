@@ -1,0 +1,105 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-embassies
+      author: embassy-flow
+      changes:
+        - createTable:
+            tableName: embassies
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: country
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: city
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: language
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - insert:
+            tableName: embassies
+            columns:
+              - column: { name: name, value: "İtaliya səfirliyi" }
+              - column: { name: country, value: "İtaliya" }
+              - column: { name: city, value: "Bakı" }
+              - column: { name: language, value: "IT" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: embassies
+            columns:
+              - column: { name: name, value: "Fransa səfirliyi" }
+              - column: { name: country, value: "Fransa" }
+              - column: { name: city, value: "Bakı" }
+              - column: { name: language, value: "FR" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: embassies
+            columns:
+              - column: { name: name, value: "ABŞ səfirliyi" }
+              - column: { name: country, value: "Amerika Birləşmiş Ştatları" }
+              - column: { name: city, value: "Bakı" }
+              - column: { name: language, value: "US" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: embassies
+            columns:
+              - column: { name: name, value: "Almaniya səfirliyi" }
+              - column: { name: country, value: "Almaniya" }
+              - column: { name: city, value: "Bakı" }
+              - column: { name: language, value: "DE" }
+              - column: { name: active, valueBoolean: true }
+        - insert:
+            tableName: embassies
+            columns:
+              - column: { name: name, value: "Böyük Britaniya səfirliyi" }
+              - column: { name: country, value: "Birləşmiş Krallıq" }
+              - column: { name: city, value: "Bakı" }
+              - column: { name: language, value: "EN" }
+              - column: { name: active, valueBoolean: true }
+        - addColumn:
+            tableName: document_orders
+            columns:
+              - column:
+                  name: embassy_id
+                  type: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: document_orders
+            baseColumnNames: embassy_id
+            constraintName: fk_document_orders_embassy
+            referencedTableName: embassies
+            referencedColumnNames: id

@@ -1,0 +1,103 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-document-orders
+      author: embassy-flow
+      changes:
+        - createSequence:
+            sequenceName: order_no_seq
+            startValue: 1
+            incrementBy: 1
+        - createTable:
+            tableName: document_orders
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: document_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: language
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: order_number
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: order_timeline
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: order_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: step
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: order_timeline
+            baseColumnNames: order_id
+            constraintName: fk_order_timeline_order
+            referencedTableName: document_orders
+            referencedColumnNames: id
+        - createIndex:
+            tableName: order_timeline
+            indexName: idx_order_timeline_order_id
+            columns:
+              - column:
+                  name: order_id
+  - changeSet:
+      id: 001b-order-timeline-updated-at
+      author: embassy-flow
+      changes:
+        - addColumn:
+            tableName: order_timeline
+            columns:
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false

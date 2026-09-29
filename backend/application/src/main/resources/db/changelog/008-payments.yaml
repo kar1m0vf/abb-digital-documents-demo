@@ -1,0 +1,80 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-payments
+      author: embassy-flow
+      changes:
+        - createSequence:
+            sequenceName: txn_no_seq
+            startValue: 1
+            incrementBy: 1
+        - createTable:
+            tableName: payments
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: order_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: card_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: NUMERIC(18,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transaction_no
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: payments
+            baseColumnNames: order_id
+            constraintName: fk_payments_order
+            referencedTableName: document_orders
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: payments
+            baseColumnNames: card_id
+            constraintName: fk_payments_card
+            referencedTableName: cards
+            referencedColumnNames: id
+        - createIndex:
+            tableName: payments
+            indexName: idx_payments_order_id
+            columns:
+              - column:
+                  name: order_id

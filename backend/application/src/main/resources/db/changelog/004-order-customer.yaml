@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-order-customer
+      author: embassy-flow
+      changes:
+        - addColumn:
+            tableName: document_orders
+            columns:
+              - column:
+                  name: customer_id
+                  type: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: document_orders
+            baseColumnNames: customer_id
+            constraintName: fk_order_customer
+            referencedTableName: customers
+            referencedColumnNames: id
+        - createIndex:
+            tableName: document_orders
+            indexName: idx_order_customer_id
+            columns:
+              - column:
+                  name: customer_id

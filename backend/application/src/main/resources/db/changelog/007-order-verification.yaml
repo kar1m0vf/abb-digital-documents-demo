@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-order-verification
+      author: embassy-flow
+      changes:
+        - addColumn:
+            tableName: document_orders
+            columns:
+              - column:
+                  name: verification_code
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: true
+                    unique: true

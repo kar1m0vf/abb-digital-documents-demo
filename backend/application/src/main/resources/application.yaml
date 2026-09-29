@@ -1,0 +1,31 @@
+server:
+  port: ${APP_PORT:8080}
+
+spring:
+  application:
+    name: embassy-flow
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:embassy_flow}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USER:embassy}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:embassy_dev}}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/master.yaml
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+demo:
+  otp: ${DEMO_OTP:123456}
+
+app:
+  verify-base-url: ${VERIFY_BASE_URL:http://localhost:8080/api/v1/portal/documents}

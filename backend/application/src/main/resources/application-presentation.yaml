@@ -1,0 +1,16 @@
+# Local presentation profile; upstream PostgreSQL/Liquibase configuration stays available.
+server:
+  address: 127.0.0.1
+spring:
+  datasource:
+    url: jdbc:h2:file:./data/presentation;MODE=PostgreSQL;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  liquibase:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: update
+demo:
+  otp: "123456"
