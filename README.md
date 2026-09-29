@@ -1,108 +1,100 @@
 # ABB — Rəqəmsal Sənəd Sifarişi
 
-Демонстрационный проект BDA на **HTML, CSS и ванильном JavaScript**. Интерфейс перенесён из [ABB-web в Figma](https://www.figma.com/design/gkOJILonA6fhtwvTC8CQdf/ABB-web?node-id=0-1), поверх первоначального прототипа по `ABB.pdf`. Интерфейс клиента — на азербайджанском; панель посольства — на английском. Источники анимаций, проверки и ограничения точности описаны в [MOTION.md](MOTION.md).
+Bu, **HTML, CSS və saf JavaScript** üzərində qurulmuş BDA nümayiş layihəsidir. İnterfeys ilkin `ABB.pdf` prototipi əsasında [Figma-dakı ABB-web](https://www.figma.com/design/gkOJILonA6fhtwvTC8CQdf/ABB-web?node-id=0-1) faylından hazırlanıb. Müştəri interfeysi Azərbaycan, səfirlik paneli isə ingilis dilindədir. Animasiyaların mənbələri, yoxlamalar və dəqiqlik məhdudiyyətləri [MOTION.md](MOTION.md) faylında təsvir olunub.
 
-## Запуск
+## İşə salma
 
-**С подключённым бэкендом:** нужны Node.js 18+ и JDK 21+. Выполните
-`npm run dev:full` и откройте **http://localhost:4173**. Команда запускает сайт,
-Spring Boot и локальную файловую базу H2; Docker не нужен. Первый запуск скачивает
-зависимости. Остановка обоих процессов — `Ctrl+C`. Десять штатных FİN из исходного
-бэкенда, OTP и карта перечислены в [DEMO_DATA.md](DEMO_DATA.md). Подробности —
-[backend/UPSTREAM.md](backend/UPSTREAM.md).
+**Backend ilə:** Node.js 18+ və JDK 21+ tələb olunur. Aşağıdakı əmri icra edin və **http://localhost:4173** ünvanını açın:
 
-**Автономная демонстрация без бэкенда:**
+```bash
+npm run dev:full
+```
 
-Нужен Node.js 18 или новее. Откройте папку проекта в VS Code и выполните:
+Əmr saytı, Spring Boot backend-i və lokal fayl əsaslı H2 bazasını işə salır; Docker tələb olunmur. İlk işəsalma asılılıqları endirir. Hər iki prosesi `Ctrl+C` ilə dayandırmaq olar. Mənbə backend-in on standart FIN-i, əlavə `ABC1234` profili, OTP və kart məlumatları [DEMO_DATA.md](DEMO_DATA.md) faylında verilib. Ətraflı backend qeydləri: [backend/UPSTREAM.md](backend/UPSTREAM.md).
+
+**Backend olmadan avtonom nümayiş:** Node.js 18 və ya daha yeni versiya tələb olunur. Layihə qovluğunda icra edin:
 
 ```bash
 npm run dev
 ```
 
-Откройте **https://kar1m0vf.github.io/abb-digital-documents-demo/#/documents**. Устанавливать npm-пакеты для запуска не требуется. Альтернатива: VS Code Live Server на `index.html`.
+Sonra **http://localhost:4173/#/documents** ünvanını açın. İşə salmaq üçün npm paketlərini ayrıca quraşdırmaq lazım deyil. Alternativ olaraq `index.html` üçün VS Code Live Server istifadə edilə bilər. Hazır statik nümayiş də [GitHub Pages](https://kar1m0vf.github.io/abb-digital-documents-demo/#/documents) üzərində açıqdır.
 
-Открывать `index.html` двойным щелчком не нужно: исходники используют ES-модули, которым необходим HTTP-сервер.
+`index.html` faylını iki dəfə klikləməklə açmayın: mənbə kodu HTTP server tələb edən ES modullarından istifadə edir.
 
-## Проверить за две минуты
+## İki dəqiqədə yoxlama
 
-1. Выберите «Hesabdan çıxarış» или «Səfirliyə arayış» → «Davam et».
-2. Выберите посольство и язык. Для выписки доступны также личное использование и другой получатель.
-3. Введите FİN и OTP из [DEMO_DATA.md](DEMO_DATA.md). Можно вставить код целиком.
-4. Выберите один или несколько счетов/карт. Кредитная карта недоступна, как предусмотрено макетом.
-5. Задайте язык и эквивалентную валюту отдельно для каждого счёта. Для выписки также доступны период, собственный диапазон дат и тип операций.
-6. Откройте документ, подтвердите проверку.
-7. Введите карту, срок и CVV из [DEMO_DATA.md](DEMO_DATA.md), затем нажмите кнопку оплаты. Для проверки отказа используйте второй номер карты из того же файла; после ошибки повторите оплату с успешным номером.
-8. Заказ появится в «Sifarişlərim». Внизу страницы откройте «Səfirlik paneli» или перейдите на **http://localhost:4173/#/embassy**.
-9. В панели выберите нужное посольство, найдите номер заказа, измените статус. Он отобразится и в клиентском списке.
+1. `Hesabdan çıxarış` və ya `Səfirliyə arayış` seçin, sonra `Davam et` düyməsini basın.
+2. Səfirliyi və dili seçin. Çıxarış üçün şəxsi istifadə və başqa qurum variantları da mövcuddur.
+3. [DEMO_DATA.md](DEMO_DATA.md) faylındakı FIN və OTP-ni daxil edin. Kodu bütöv şəkildə ilk xanaya yapışdırmaq olar.
+4. Bir və ya bir neçə hesab/kart seçin. Kredit kartı maketdə nəzərdə tutulduğu kimi seçim üçün bağlıdır.
+5. Hər hesab üçün dili və ekvivalent valyutanı ayrıca seçin. Çıxarışda dövr, xüsusi tarix aralığı və əməliyyat növü də seçilə bilər.
+6. Sənədi açın və məlumatları yoxladığınızı təsdiqləyin.
+7. [DEMO_DATA.md](DEMO_DATA.md) faylındakı kartı, son istifadə tarixini və CVV-ni daxil edib ödəniş düyməsini basın. İmtina ssenarisi üçün həmin fayldakı ikinci kart nömrəsini istifadə edin, sonra uğurlu nömrə ilə ödənişi təkrarlayın.
+8. Sifariş `Sifarişlərim` bölməsində görünəcək. Səhifənin aşağısındakı `Səfirlik paneli` keçidini və ya **http://localhost:4173/#/embassy** ünvanını açın.
+9. Paneldə uyğun səfirliyi seçin, sifariş nömrəsini tapın və statusu dəyişin. Yeni status müştərinin siyahısında da görünəcək.
 
-## Что реализовано
+## Həyata keçirilən funksiyalar
 
-- Семь согласованных этапов; FİN и OTP — подэкраны второго этапа.
-- Оба типа документа, возврат назад с сохранением выбора, блокировка переходов без обязательных данных.
-- Валидация FİN/OTP, вставка кодов, переход между полями, Enter/Backspace/стрелки, таймер повторной отправки и лимит неверных OTP.
-- Выбор нескольких продуктов, скрытие баланса, отдельные параметры каждого продукта.
-- Формирование документа из выбранных параметров; демонстрационные операции реально фильтруются по периоду и направлению.
-- Просмотр документа в модальном окне, локальная выгрузка PDF и печать. PDF поддерживает азербайджанский текст. Служебные пометки и тестовые подсказки убраны из интерфейса и PDF; данные и ограничения перечислены в DEMO_DATA.md.
-- Проверка номера тестовой карты по Луну, срока и CVV; успешная и отклонённая оплата, состояние загрузки и защита от дублей.
-- История заказов и оплат, уведомления, страницы счетов и карт, профиль демо-пользователя.
-- Панель посольства: поиск по имени/номеру, фильтры статусов, счётчики, пагинация, просмотр и изменение статуса. Числа считаются из данных.
-- Сохранение демо-заказов и статусов в localStorage, синхронизация между вкладками одного origin. FİN, OTP и данные карты не сохраняются.
-- Мобильная навигация, адаптивный индикатор шагов, гибкие формы, таблица с горизонтальной прокруткой, клавиатурные фокусы и reduced-motion.
-- Ресурсы локальные; Tailwind CDN и загрузка внешних шрифтов не нужны.
+- Razılaşdırılmış yeddi mərhələ; FIN və OTP ikinci mərhələnin alt ekranlarıdır.
+- Hər iki sənəd növü, seçimləri saxlayan geri keçid və məcburi məlumat olmadan irəliləmənin bloklanması.
+- FIN/OTP yoxlaması, kodun yapışdırılması, xanalar arasında keçid, Enter/Backspace/ox düymələri, təkrar göndərmə taymeri və səhv OTP limiti.
+- Bir neçə məhsulun seçilməsi, balansın gizlədilməsi və hər məhsul üçün ayrıca parametrlər.
+- Seçilmiş parametrlər əsasında sənədin yaradılması; demo əməliyyatları dövrə və istiqamətə görə real şəkildə süzülür.
+- Sənədə modal pəncərədə baxış, lokal PDF yükləmə və çap. PDF Azərbaycan mətnini dəstəkləyir. Xidmət qeydləri və test ipucları interfeysdən və PDF-dən çıxarılıb; məlumat və məhdudiyyətlər `DEMO_DATA.md` faylındadır.
+- Test kartının Luhn alqoritmi, son istifadə tarixi və CVV üzrə yoxlanması; uğurlu və imtina edilmiş ödəniş, yüklənmə vəziyyəti və dublikatlardan qorunma.
+- Sifariş və ödəniş tarixçəsi, bildirişlər, hesab və kart səhifələri, demo istifadəçi profili.
+- Səfirlik paneli: ad/nömrə üzrə axtarış, status filtrləri, sayğaclar, səhifələmə, baxış və status dəyişikliyi. Göstəricilər məlumatlardan hesablanır.
+- Demo sifariş və statuslarının `localStorage`-da saxlanması, eyni origin daxilində tablararası sinxronizasiya. FIN, OTP və kart məlumatları saxlanmır.
+- Mobil naviqasiya, adaptiv mərhələ göstəricisi, çevik formalar, üfüqi sürüşdürülən cədvəl, klaviatura fokusları və `reduced-motion` dəstəyi.
+- Bütün resurslar lokaldır; Tailwind CDN və xarici şrift yüklənməsi tələb olunmur.
 
-## Структура
+## Struktur
 
-| Файл | Назначение |
+| Fayl | Təyinat |
 | --- | --- |
-| `index.html` | Общая HTML-оболочка |
-| `css/styles.css` | Токены, компоненты, мобильные правила и печать |
-| `css/figma.css` | Размеры, типографика и оформление по Figma |
-| `css/motion.css`, `js/motion.js` | Анимации и интерактивные варианты Figma |
-| `css/select.css`, `js/select.js` | Выпадающие списки по макету Figma: заказ и панель посольства |
-| `js/app.js` | Навигация и события, переходы этапов |
-| `js/store.js` | Состояние заказа и хранение демо-данных |
-| `js/data.js` | Документы, тарифы, посольства, тестовые счета |
-| `js/components.js` | Шапка, индикатор, кнопки и общие элементы |
-| `js/views/` | Раздельные экраны клиента, документа и панели посольства |
-| `js/services/api.js` | Демонстрационный адаптер FİN/OTP/оплаты |
-| `js/services/transactions.js` | Демонстрационные операции и фильтрация |
-| `js/services/pdf.js` | Локальное создание PDF; библиотека загружается по запросу |
-| `js/modal.js` | Модальные окна и уведомления |
-| `tests/` | Тесты логики и генерации экранов |
+| `index.html` | Ümumi HTML karkası |
+| `css/styles.css` | Dizayn tokenləri, komponentlər, mobil qaydalar və çap |
+| `css/figma.css` | Figma ölçüləri, tipoqrafika və görünüş |
+| `css/motion.css`, `js/motion.js` | Animasiyalar və Figma interaktiv variantları |
+| `css/select.css`, `js/select.js` | Sifariş və səfirlik paneli üçün Figma maketinə uyğun açılan siyahılar |
+| `js/app.js` | Naviqasiya, hadisələr və mərhələ keçidləri |
+| `js/store.js` | Sifariş vəziyyəti və demo məlumatlarının saxlanması |
+| `js/data.js` | Sənədlər, tariflər, səfirliklər və test hesabları |
+| `js/components.js` | Başlıq, mərhələ göstəricisi, düymələr və ümumi elementlər |
+| `js/views/` | Müştəri, sənəd və səfirlik panelinin ayrı ekranları |
+| `js/services/api.js` | FIN/OTP/ödəniş üçün avtonom demo adapteri |
+| `js/services/transactions.js` | Demo əməliyyatları və süzgəc |
+| `js/services/pdf.js` | Lokal PDF yaradılması; kitabxana tələb olduqda yüklənir |
+| `js/modal.js` | Modal pəncərələr və bildirişlər |
+| `tests/` | Məntiq və ekran generasiyası testləri |
 
-## Подключённый демонстрационный backend
+## Qoşulmuş nümayiş backend-i
 
-В полном запуске FİN/OTP, получение счетов, создание и история заказов, а также
-смена статусов новых заказов работают через сервер. Заказы сохраняются после
-перезапуска в `backend/data/`. HTML, CSS, тексты и порядок экранов сохранены.
-PDF и операции в выписке остаются локальными демонстрационными данными.
+Tam işəsalmada FIN/OTP, hesabların alınması, sifarişlərin yaradılması və tarixçəsi, həmçinin yeni sifarişlərin status dəyişikliyi server vasitəsilə işləyir. Sifarişlər yenidən başladıqdan sonra `backend/data/` qovluğunda qalır. HTML, CSS, mətnlər və ekranların ardıcıllığı dəyişdirilməyib. PDF və çıxarış əməliyyatları lokal demo məlumatları olaraq qalır.
 
-`js/services/api-client.js` выбирает автономный или серверный адаптер;
-`backend-api.js` переводит ответы API в формат существующего интерфейса.
-При полном запуске **http://localhost:4173/?mode=demo** открывает автономный режим.
-Режим фиксируется при загрузке: сбой API не создаёт локальную «успешную» оплату.
-На GitHub Pages Java не запускается — там остаётся автономное демо.
+`js/services/api-client.js` avtonom və ya server adapterini seçir; `backend-api.js` API cavablarını mövcud interfeysin formatına çevirir. Tam işəsalma zamanı **http://localhost:4173/?mode=demo** avtonom rejimi açır. Rejim səhifə yüklənəndə sabitlənir: API nasazlığı lokal “uğurlu” ödəniş yaratmır. GitHub Pages Java işə salmır və orada avtonom demo istifadə olunur.
 
-## Переход к реальным банковским интеграциям
+## Real bank inteqrasiyasına keçid
 
-Текущая версия — прототип, не банковская интеграция. Она не отправляет SMS, не списывает деньги, не подписывает и не передаёт документы посольствам. Демо-панель открыта намеренно и не является авторизованным кабинетом.
+Hazırkı versiya prototipdir, bank inteqrasiyası deyil. O, SMS göndərmir, pul silmir, sənədləri imzalamır və səfirliyə ötürmür. Demo paneli qəsdən açıqdır və avtorizasiyalı kabinet sayılmır.
 
-Замените адаптер `js/services/api.js` на запросы к API команды. На сервере должны находиться проверка личности и OTP, сессии, проверка доступа к счетам и заказам, расчёт тарифа и валютного эквивалента, идемпотентное создание заказа и статусы. Демо-счета и операции заменяются серверными данными. Клиентская проверка не заменяет серверную.
+`js/services/api.js` adapterini komandanın API sorğuları ilə əvəz edin. Şəxsiyyət və OTP yoxlaması, sessiyalar, hesab və sifarişlərə giriş nəzarəti, tarif və valyuta ekvivalentinin hesablanması, idempotent sifariş yaradılması və statuslar serverdə olmalıdır. Demo hesab və əməliyyatları server məlumatları ilə əvəz edilməlidir. Müştəri tərəfdəki yoxlama server yoxlamasını əvəz etmir.
 
-При подключении оплаты замените тестовые поля на форму платёжного провайдера/банка и передавайте токен. Не переносите приём реальных PAN/CVV в localStorage или этот демо-адаптер. Выдачу официального PDF, подпись и доставку должен выполнять сервер; здесь создаётся только образец.
+Ödəniş inteqrasiyasında test xanalarını ödəniş provayderinin və ya bankın forması ilə əvəz edin və yalnız token ötürün. Real PAN/CVV qəbulunu `localStorage`-a və ya bu demo adapterinə keçirməyin. Rəsmi PDF-in verilməsi, imzalanması və çatdırılması serverdə yerinə yetirilməlidir; burada yalnız nümunə yaradılır.
 
-В демонстрации цена — 5 AZN за выписку или 10 AZN за одну объединённую справку независимо от числа выбранных счетов. Этот вариант принят по макету с одной копией; при интеграции тариф необходимо подтвердить у команды. Валютные курсы фиксированные и обозначены как тестовые.
+Demo tarifində çıxarış 5 AZN, seçilmiş hesabların sayından asılı olmayaraq birləşdirilmiş arayış isə 10 AZN-dir. Bu yanaşma bir nüsxəli maketə əsaslanır; real inteqrasiya zamanı tarif komanda ilə təsdiqlənməlidir. Valyuta məzənnələri sabit və test məlumatı kimi işarələnib.
 
-## Проверки и ограничения
+## Yoxlamalar və məhdudiyyətlər
 
 ```bash
 npm test
 ```
 
-Проверены границы дат/карт, OTP и защита от повторного применения, идемпотентность одновременных оплат, повтор после отказа, оба типа документа, все шаблоны этапов, хранение и изменение статуса, фильтрация операций, экранирование текста и повреждённые сохранённые данные.
+Tarix və kart sərhədləri, OTP və təkrar istifadədən qorunma, paralel ödənişlərin idempotentliyi, imtina sonrası təkrar cəhd, hər iki sənəd növü, bütün mərhələ şablonları, statusların saxlanması və dəyişdirilməsi, əməliyyat süzgəci, mətnin təhlükəsiz göstərilməsi və zədələnmiş saxlanmış məlumatlar yoxlanılıb.
 
-В браузере через Playwright проверены полный заказ выписки, отказ и повтор оплаты, скачивание PDF, страницы заказов и панели посольства, фокус мышью и клавиатурой. Проверены размеры 1440×1000, 390×844 и 320×740. Печать и другие браузеры отдельно не проверялись. Данные для прохождения сценария — [DEMO_DATA.md](DEMO_DATA.md); подробности проверки — QA.md.
+Playwright ilə brauzerdə çıxarış sifarişinin tam axını, ödəniş imtinası və təkrarı, PDF yüklənməsi, sifariş və səfirlik paneli səhifələri, siçan və klaviatura fokusu yoxlanılıb. 1440×1000, 390×844 və 320×740 ölçüləri sınaqdan keçirilib. Çap və digər brauzerlər ayrıca yoxlanmayıb. Ssenari məlumatları [DEMO_DATA.md](DEMO_DATA.md), yoxlama detalları isə [QA.md](QA.md) faylındadır.
 
-## Ресурсы
+## Resurslar
 
-Оформление использует локальные экспорты из Figma в `assets/figma/`: логотип, карты, иллюстрации, подсказки FİN, значки и эмодзи в PNG/SVG. Их вид не зависит от системного шрифта эмодзи. Inter хранится в `assets/fonts/` вместе с лицензией. Служебные SVG-иконки — Lucide (лицензия в `assets/LUCIDE-LICENSE`). Экспорт PDF использует локальную копию pdf-lib (лицензия в `vendor/PDF-LIB-LICENSE.md`).
+Görünüş `assets/figma/` qovluğundakı lokal Figma ixraclarından istifadə edir: loqotip, kartlar, illüstrasiyalar, FIN ipucları, nişanlar və PNG/SVG emojilər. Onların görünüşü sistem emoji şriftindən asılı deyil. Inter şrifti lisenziyası ilə birlikdə `assets/fonts/` qovluğundadır. Xidmət SVG ikonları Lucide-dır; lisenziya `assets/LUCIDE-LICENSE` faylındadır. PDF ixracı `pdf-lib` kitabxanasının lokal nüsxəsini istifadə edir; lisenziya `vendor/PDF-LIB-LICENSE.md` faylındadır.

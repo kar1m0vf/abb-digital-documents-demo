@@ -1,203 +1,203 @@
-# Демонстрационные данные и запуск
+# Demo məlumatları və işə salma
 
-Этот файл — единый справочник для разработчика и ведущего показа. Все FIN-коды, телефоны, счета, карты, заказы и учётные данные ниже вымышлены и предназначены только для презентационного прототипа. Интерфейс не показывает эти подсказки автоматически.
+Bu fayl developer və nümayiş aparıcısı üçün vahid məlumat kitabçasıdır. Aşağıdakı bütün FIN kodları, telefonlar, hesablar, kartlar, sifarişlər və giriş məlumatları uydurmadır və yalnız təqdimat prototipi üçün nəzərdə tutulub. İnterfeys bu ipuclarını avtomatik göstərmir.
 
-## Быстрый сценарий показа
+## Sürətli nümayiş ssenarisi
 
-| Что вводить | Значение |
+| Daxil ediləcək məlumat | Dəyər |
 | --- | --- |
-| FIN для GitHub Pages и `npm run dev` | `ABC1234` |
-| FIN для `npm run dev:full` | любой из 11 кодов в таблице ниже |
+| GitHub Pages və `npm run dev` üçün FIN | `ABC1234` |
+| `npm run dev:full` üçün FIN | aşağıdakı cədvəldəki 11 koddan hər hansı biri |
 | OTP | `123456` |
-| Успешная тестовая карта | `4242 4242 4242 4242` |
-| Отклонённая тестовая карта | `4000 0000 0000 0002` |
-| Срок карты | `12/30` |
+| Uğurlu test kartı | `4242 4242 4242 4242` |
+| İmtina edilən test kartı | `4000 0000 0000 0002` |
+| Kartın son istifadə tarixi | `12/30` |
 | CVV / CVC | `123` |
 
-FIN и OTP можно вставлять целиком в первое поле. После отклонённой оплаты замените номер карты на успешный и снова введите CVV: после отправки поле CVV очищается.
+FIN və OTP-ni bütöv şəkildə ilk xanaya yapışdırmaq olar. Ödəniş imtinasından sonra kart nömrəsini uğurlu nömrə ilə əvəz edin və CVV-ni yenidən daxil edin: ödəniş göndərildikdə CVV xanası təmizlənir.
 
-## Режимы запуска
+## İş rejimləri
 
-| Режим | Команда или адрес | Доступные FIN | Хранение заказов |
+| Rejim | Əmr və ya ünvan | Mövcud FIN-lər | Sifarişlərin saxlanması |
 | --- | --- | --- | --- |
-| GitHub Pages | `https://kar1m0vf.github.io/abb-digital-documents-demo/` | только `ABC1234` | `localStorage` браузера |
-| Локальный фронтенд | `npm run dev` | только `ABC1234` | `localStorage` браузера |
-| Фронтенд и Java-бэкенд | `npm run dev:full` | все 11 FIN | файловая H2-база |
-| Принудительный автономный режим при полном запуске | `http://localhost:4173/?mode=demo` | только `ABC1234` | `localStorage` браузера |
+| GitHub Pages | `https://kar1m0vf.github.io/abb-digital-documents-demo/` | yalnız `ABC1234` | brauzerin `localStorage` yaddaşı |
+| Lokal frontend | `npm run dev` | yalnız `ABC1234` | brauzerin `localStorage` yaddaşı |
+| Frontend və Java backend | `npm run dev:full` | bütün 11 FIN | fayl əsaslı H2 bazası |
+| Tam işəsalmada məcburi avtonom rejim | `http://localhost:4173/?mode=demo` | yalnız `ABC1234` | brauzerin `localStorage` yaddaşı |
 
-Для полного запуска нужны Node.js 18+ и JDK 21+. Docker и PostgreSQL не требуются. Первый запуск загружает Gradle и Maven-зависимости. `Ctrl+C` останавливает фронтенд и бэкенд.
+Tam işəsalma üçün Node.js 18+ və JDK 21+ tələb olunur. Docker və PostgreSQL lazım deyil. İlk işəsalma Gradle və Maven asılılıqlarını endirir. `Ctrl+C` frontend və backend-i dayandırır.
 
-Полезные адреса полного запуска:
+Tam işəsalmanın faydalı ünvanları:
 
-- клиентский интерфейс: `http://localhost:4173/#/documents`;
-- панель посольства: `http://localhost:4173/#/embassy`;
-- проверка бэкенда: `http://127.0.0.1:8080/api/v1/demo/health`;
+- müştəri interfeysi: `http://localhost:4173/#/documents`;
+- səfirlik paneli: `http://localhost:4173/#/embassy`;
+- backend sağlamlıq yoxlaması: `http://127.0.0.1:8080/api/v1/demo/health`;
 - Swagger UI: `http://127.0.0.1:8080/swagger-ui/index.html`;
 - OpenAPI JSON: `http://127.0.0.1:8080/v3/api-docs`.
 
-Порты можно изменить переменными `PORT` и `BACKEND_PORT`. Для доступа к фронтенду по сети задайте `HOST=0.0.0.0` или поставьте Nginx/Caddy перед `127.0.0.1:4173`. Java-бэкенд в презентационном профиле остаётся на `127.0.0.1` и доступен браузеру через встроенный прокси фронтенда.
+Portları `PORT` və `BACKEND_PORT` dəyişənləri ilə dəyişmək olar. Frontend-ə şəbəkədən giriş üçün `HOST=0.0.0.0` təyin edin və ya `127.0.0.1:4173` qarşısında Nginx/Caddy yerləşdirin. Təqdimat profilində Java backend `127.0.0.1` ünvanında qalır və brauzer ona frontend-in daxili proksisi vasitəsilə müraciət edir.
 
-## Все 11 активных FIN
+## Bütün 11 aktiv FIN
 
-`ABC1234` работает в обоих режимах. Остальные десять FIN работают только при `npm run dev:full`.
+`ABC1234` hər iki rejimdə işləyir. Digər on FIN yalnız `npm run dev:full` ilə işləyir.
 
-| № | FIN | Клиент | Телефон в интерфейсе | Продукты бэкенда |
+| № | FIN | Müştəri | İnterfeysdə telefon | Backend məhsulları |
 | ---: | --- | --- | --- | --- |
-| 1 | `ABC1234` | Aydan Əhədova | `+994 50 *** ** 00` | 7 презентационных продуктов, таблица ниже |
-| 2 | `5D7X9Q2` | Aydan Ahadova | `+994 50 *** ** 82` | Visa · 4581 и счёт · 2156, AZN 12500.50; Mastercard · 7788 и счёт · 2157, USD 3400.00 |
-| 3 | `6F8A1B3` | Elvin Məmmədov | `+994 55 *** ** 80` | Visa · 3321 и вклад · 2158, AZN 820.75 |
-| 4 | `2K9C4D7` | Nigar Əliyeva | `+994 70 *** ** 14` | Mastercard · 9014 и счёт · 2159, EUR 2150.00 |
-| 5 | `7H2E5F1` | Rəşad Quliyev | `+994 50 *** ** 41` | Visa · 6642 и счёт · 2160, AZN -300.25 |
-| 6 | `3J6T8G4` | Leyla Hüseynova | `+994 55 *** ** 50` | Visa · 4950 и вклад · 2161, AZN 9999.99 |
-| 7 | `8K4P6S2` | Tural Hüseynov | `+994 50 *** ** 11` | Visa · 2163 и вклад · 2163, AZN 4520.10 |
-| 8 | `9M2R7T4` | Samir Nəsirov | `+994 50 *** ** 22` | Visa · 2164 и счёт · 2164, AZN 3100.00 |
-| 9 | `4N6Q9W1` | Fidan Abbasova | `+994 55 *** ** 55` | Visa · 2165 и счёт · 2165, AZN 7800.55 |
-| 10 | `1L5H3J8` | Orxan Qəhrəmanov | `+994 70 *** ** 77` | Visa · 2166 и счёт · 2166, AZN 990.25 |
-| 11 | `7Z2C5V9` | Günay Məmmədli | `+994 51 *** ** 00` | Visa · 2167 и вклад · 2167, AZN 6050.40 |
+| 1 | `ABC1234` | Aydan Əhədova | `+994 50 *** ** 00` | 7 təqdimat məhsulu; aşağıdakı cədvələ baxın |
+| 2 | `5D7X9Q2` | Aydan Ahadova | `+994 50 *** ** 82` | Visa · 4581 və hesab · 2156, AZN 12500.50; Mastercard · 7788 və hesab · 2157, USD 3400.00 |
+| 3 | `6F8A1B3` | Elvin Məmmədov | `+994 55 *** ** 80` | Visa · 3321 və əmanət · 2158, AZN 820.75 |
+| 4 | `2K9C4D7` | Nigar Əliyeva | `+994 70 *** ** 14` | Mastercard · 9014 və hesab · 2159, EUR 2150.00 |
+| 5 | `7H2E5F1` | Rəşad Quliyev | `+994 50 *** ** 41` | Visa · 6642 və hesab · 2160, AZN -300.25 |
+| 6 | `3J6T8G4` | Leyla Hüseynova | `+994 55 *** ** 50` | Visa · 4950 və əmanət · 2161, AZN 9999.99 |
+| 7 | `8K4P6S2` | Tural Hüseynov | `+994 50 *** ** 11` | Visa · 2163 və əmanət · 2163, AZN 4520.10 |
+| 8 | `9M2R7T4` | Samir Nəsirov | `+994 50 *** ** 22` | Visa · 2164 və hesab · 2164, AZN 3100.00 |
+| 9 | `4N6Q9W1` | Fidan Abbasova | `+994 55 *** ** 55` | Visa · 2165 və hesab · 2165, AZN 7800.55 |
+| 10 | `1L5H3J8` | Orxan Qəhrəmanov | `+994 70 *** ** 77` | Visa · 2166 və hesab · 2166, AZN 990.25 |
+| 11 | `7Z2C5V9` | Günay Məmmədli | `+994 51 *** ** 00` | Visa · 2167 və əmanət · 2167, AZN 6050.40 |
 
-Сроки карт из исходных seed-данных: 4581 — `05/26`, 7788 — `09/25`, 3321 — `11/26`, 9014 — `03/26`, 6642 — `07/25`, 4950 и карты 2163–2167 — `12/30`. Эти сроки являются метаданными продуктов и не используются формой оплаты документа. Для оплаты применяйте отдельные тестовые номера из раздела «Быстрый сценарий показа».
+Mənbə seed məlumatlarındakı kart tarixləri: 4581 — `05/26`, 7788 — `09/25`, 3321 — `11/26`, 9014 — `03/26`, 6642 — `07/25`, 4950 və 2163–2167 kartları — `12/30`. Bu tarixlər məhsul metadatasıdır və sənəd ödənişi formasında istifadə edilmir. Ödəniş üçün “Sürətli nümayiş ssenarisi” bölməsindəki ayrıca test nömrələrindən istifadə edin.
 
-## Продукты профиля ABC1234
+## ABC1234 profilinin məhsulları
 
-| Внутренний ID | Продукт | Последние цифры | Валюта | Баланс | Доступность |
+| Daxili ID | Məhsul | Son rəqəmlər | Valyuta | Balans | Mövcudluq |
 | --- | --- | ---: | --- | ---: | --- |
-| `visa-azn` | Tam Visa | 7575 | AZN | 2450.80 | доступен |
-| `master-azn` | Tam Mastercard | 4581 | AZN | 680.25 | доступен |
-| `visa-usd` | Visa USD | 9032 | USD | 1200.00 | доступен |
-| `credit` | Kredit kartı | 1084 | AZN | -350.00 | выбор заблокирован по макету |
-| `account-azn` | Cari hesab | 2156 | AZN | 5230.50 | доступен |
-| `account-usd` | Cari hesab | 3860 | USD | 3400.00 | доступен |
-| `account-eur` | Cari hesab | 6241 | EUR | 1850.00 | доступен |
+| `visa-azn` | Tam Visa | 7575 | AZN | 2450.80 | mövcuddur |
+| `master-azn` | Tam Mastercard | 4581 | AZN | 680.25 | mövcuddur |
+| `visa-usd` | Visa USD | 9032 | USD | 1200.00 | mövcuddur |
+| `credit` | Kredit kartı | 1084 | AZN | -350.00 | maketə əsasən seçim bağlıdır |
+| `account-azn` | Cari hesab | 2156 | AZN | 5230.50 | mövcuddur |
+| `account-usd` | Cari hesab | 3860 | USD | 3400.00 | mövcuddur |
+| `account-eur` | Cari hesab | 6241 | EUR | 1850.00 | mövcuddur |
 
-Можно выбрать не более трёх карт и счетов суммарно. Балансы изначально скрыты. Номера счетов профиля отображаются маской `AZ•• •••• •••• •••• •••• NNNN`.
+Kart və hesablar daxil olmaqla ümumilikdə ən çox üç məhsul seçilə bilər. Balanslar başlanğıcda gizlidir. Profilin hesab nömrələri `AZ•• •••• •••• •••• •••• NNNN` maskası ilə göstərilir.
 
-## OTP и ошибки входа
+## OTP və giriş xətaları
 
-### Автономный режим
+### Avtonom rejim
 
-- правильный OTP: `123456`;
-- пример неправильного OTP: `000000`;
-- срок действия: 5 минут;
-- максимум 5 неправильных попыток;
-- повторная отправка доступна через 60 секунд;
-- успешно использованный OTP нельзя применить повторно.
+- düzgün OTP: `123456`;
+- səhv OTP nümunəsi: `000000`;
+- etibarlılıq müddəti: 5 dəqiqə;
+- ən çox 5 səhv cəhd;
+- təkrar göndərmə 60 saniyədən sonra mümkündür;
+- uğurla istifadə edilmiş OTP təkrar istifadə oluna bilməz.
 
-### Java-бэкенд
+### Java backend
 
-- правильный OTP для всех 11 FIN: `123456`;
-- срок действия: 63 секунды;
-- серверного счётчика неправильных попыток в демоверсии нет;
-- новый запрос OTP заменяет предыдущий код;
-- успешно использованный OTP нельзя применить повторно;
-- токен клиента действует 1 час и хранится только в памяти вкладки.
+- bütün 11 FIN üçün düzgün OTP: `123456`;
+- etibarlılıq müddəti: 63 saniyə;
+- demo versiyada server tərəfli səhv cəhd sayğacı yoxdur;
+- yeni OTP sorğusu əvvəlki kodu əvəz edir;
+- uğurla istifadə edilmiş OTP təkrar istifadə oluna bilməz;
+- müştəri tokeni 1 saat qüvvədədir və yalnız tabın yaddaşında saxlanır.
 
-Если код истёк, нажмите `Yenidən göndər` и снова используйте `123456`.
+Kodun vaxtı bitərsə, `Yenidən göndər` düyməsini basın və yenidən `123456` istifadə edin.
 
-## Оплата
+## Ödəniş
 
-| Сценарий | Номер | Срок | CVV |
+| Ssenari | Nömrə | Tarix | CVV |
 | --- | --- | --- | --- |
-| Успешная оплата | `4242 4242 4242 4242` | `12/30` | `123` |
-| Отклонённая оплата | `4000 0000 0000 0002` | `12/30` | `123` |
+| Uğurlu ödəniş | `4242 4242 4242 4242` | `12/30` | `123` |
+| İmtina edilən ödəniş | `4000 0000 0000 0002` | `12/30` | `123` |
 
-Форма проверяет алгоритм Луна, действующий срок и трёхзначный CVV. В Java-бэкенд передаётся только демонстрационный результат проверки, а не PAN/CVV. Реального списания нет.
+Forma Luhn alqoritmini, qüvvədə olan son istifadə tarixini və üçrəqəmli CVV-ni yoxlayır. Java backend-ə PAN/CVV deyil, yalnız demo yoxlamasının nəticəsi ötürülür. Real pul silinmir.
 
-## Панель посольства и portal API
+## Səfirlik paneli və portal API
 
-Панель текущего интерфейса открывается без отдельной авторизации:
+Hazırkı interfeysin paneli ayrıca avtorizasiya olmadan açılır:
 
 ```text
 http://localhost:4173/#/embassy
 ```
 
-Для прямой проверки исходного portal API в бэкенде есть демонстрационная учётная запись:
+Mənbə portal API-ni birbaşa yoxlamaq üçün backend-də demo hesabı var:
 
-| Поле | Значение |
+| Sahə | Dəyər |
 | --- | --- |
-| Логин | `admin@italy` |
-| Пароль | `demo1234` |
-| Роль | `ADMIN` |
-| Посольство | Италия |
+| İstifadəçi adı | `admin@italy` |
+| Şifrə | `demo1234` |
+| Rol | `ADMIN` |
+| Səfirlik | İtaliya |
 
-Текущий согласованный фронтенд панели использует presentation API и не показывает форму этого входа.
+Razılaşdırılmış hazırkı panel frontendi presentation API-dən istifadə edir və bu giriş formasını göstərmir.
 
-В seed/API присутствуют шесть посольств: Италия, Франция, США, Германия, Испания и Великобритания. В пользовательском интерфейсе доступны Италия, Франция, США, Германия и Великобритания; Испания сохранена в данных, но скрыта из выбора.
+Seed/API-də altı səfirlik var: İtaliya, Fransa, ABŞ, Almaniya, İspaniya və Böyük Britaniya. İstifadəçi interfeysində İtaliya, Fransa, ABŞ, Almaniya və Böyük Britaniya mövcuddur; İspaniya məlumatlarda saxlanılıb, lakin seçimdə gizlədilib.
 
-## Документы и расчёты
+## Sənədlər və hesablamalar
 
-- выписка `statement`: **5 AZN**;
-- справка `reference`: **10 AZN**;
-- комиссия: **0 AZN**;
-- одна объединённая копия независимо от количества выбранных продуктов;
-- языки документа: азербайджанский и английский;
-- назначение выписки: посольство, личное использование или другая организация;
-- периоды: 1, 3, 6, 12 месяцев или собственный диапазон дат;
-- операции: все, входящие или исходящие;
-- фиксированные курсы документа: 1 USD = **1.7 AZN**, 1 EUR = **1.9 AZN**, 1 GBP = **2.2 AZN**;
-- новый номер заказа: `AR-ГОД-XXXXXXXX`;
-- статусы интерфейса: `pending`, `completed`, `rejected`.
+- çıxarış `statement`: **5 AZN**;
+- arayış `reference`: **10 AZN**;
+- komissiya: **0 AZN**;
+- seçilmiş məhsulların sayından asılı olmayaraq bir birləşdirilmiş nüsxə;
+- sənəd dilləri: Azərbaycan və ingilis;
+- çıxarışın təyinatı: səfirlik, şəxsi istifadə və ya başqa qurum;
+- dövrlər: 1, 3, 6, 12 ay və ya xüsusi tarix aralığı;
+- əməliyyatlar: hamısı, mədaxil və ya məxaric;
+- sənəddə sabit məzənnələr: 1 USD = **1.7 AZN**, 1 EUR = **1.9 AZN**, 1 GBP = **2.2 AZN**;
+- yeni sifariş nömrəsi: `AR-İL-XXXXXXXX`;
+- interfeys statusları: `pending`, `completed`, `rejected`.
 
-## Демонстрационные операции выписки
+## Çıxarışın demo əməliyyatları
 
-Один набор операций используется для всех продуктов. Суммы подписываются валютой выбранного продукта, даты отсчитываются от даты документа.
+Bütün məhsullar üçün eyni əməliyyat dəsti istifadə olunur. Məbləğlər seçilmiş məhsulun valyutası ilə göstərilir, tarixlər sənəd tarixindən hesablanır.
 
-| Дней назад | Тип | Сумма | Описание |
+| Neçə gün əvvəl | Növ | Məbləğ | Təsvir |
 | ---: | --- | ---: | --- |
-| 5 | расход | 42.50 | покупка картой |
-| 12 | приход | 1500.00 | зарплата |
-| 22 | расход | 85.00 | коммунальный платёж |
-| 45 | приход | 300.00 | перевод на счёт |
-| 80 | расход | 124.90 | покупка картой |
-| 140 | приход | 500.00 | перевод на счёт |
-| 220 | расход | 65.00 | оплата услуги |
-| 320 | приход | 200.00 | перевод на счёт |
+| 5 | məxaric | 42.50 | kartla alış |
+| 12 | mədaxil | 1500.00 | əməkhaqqı |
+| 22 | məxaric | 85.00 | kommunal ödəniş |
+| 45 | mədaxil | 300.00 | hesaba köçürmə |
+| 80 | məxaric | 124.90 | kartla alış |
+| 140 | mədaxil | 500.00 | hesaba köçürmə |
+| 220 | məxaric | 65.00 | xidmət ödənişi |
+| 320 | mədaxil | 200.00 | hesaba köçürmə |
 
-## Начальные записи панели посольства
+## Səfirlik panelinin ilkin qeydləri
 
-Начальные строки относятся к Италии, используют английский язык и демонстрационный продукт. Новые серверные заказы добавляются к ним при полном запуске.
+İlkin sətirlər İtaliyaya aiddir, ingilis dilindən və demo məhsulundan istifadə edir. Tam işəsalmada yeni server sifarişləri bu siyahıya əlavə olunur.
 
-| Номер | Клиент | Документ | Статус | Дата |
+| Nömrə | Müştəri | Sənəd | Status | Tarix |
 | --- | --- | --- | --- | --- |
-| `AR-2024-000512` | Aydan Əhədova | справка | completed | 2024-05-31 |
-| `AR-2024-000489` | Elvin Məmmədov | выписка | pending | 2024-05-28 |
-| `AR-2024-000471` | Tural Hüseynov | справка | pending | 2024-05-25 |
-| `AR-2024-000125` | Nigar Əliyeva | справка | completed | 2024-05-28 |
-| `AR-2024-000124` | Rəşad Quliyev | выписка | rejected | 2024-05-27 |
-| `AR-2024-000118` | Leyla Həsənova | справка | completed | 2024-05-26 |
-| `AR-2024-000103` | Samir Nəsirov | выписка | pending | 2024-05-24 |
-| `AR-2024-000098` | Fidan Abbasova | справка | completed | 2024-05-23 |
-| `AR-2024-000091` | Orxan Qəhrəmanov | справка | rejected | 2024-05-22 |
-| `AR-2024-000087` | Günay Məmmədli | справка | pending | 2024-05-21 |
+| `AR-2024-000512` | Aydan Əhədova | arayış | completed | 2024-05-31 |
+| `AR-2024-000489` | Elvin Məmmədov | çıxarış | pending | 2024-05-28 |
+| `AR-2024-000471` | Tural Hüseynov | arayış | pending | 2024-05-25 |
+| `AR-2024-000125` | Nigar Əliyeva | arayış | completed | 2024-05-28 |
+| `AR-2024-000124` | Rəşad Quliyev | çıxarış | rejected | 2024-05-27 |
+| `AR-2024-000118` | Leyla Həsənova | arayış | completed | 2024-05-26 |
+| `AR-2024-000103` | Samir Nəsirov | çıxarış | pending | 2024-05-24 |
+| `AR-2024-000098` | Fidan Abbasova | arayış | completed | 2024-05-23 |
+| `AR-2024-000091` | Orxan Qəhrəmanov | arayış | rejected | 2024-05-22 |
+| `AR-2024-000087` | Günay Məmmədli | arayış | pending | 2024-05-21 |
 
-## Хранение и сброс данных
+## Məlumatların saxlanması və sıfırlanması
 
-### Автономный режим
+### Avtonom rejim
 
-Заказы и статусы хранятся в `localStorage` текущего origin:
+Sifariş və statuslar cari origin-in `localStorage` yaddaşında saxlanır:
 
 - `abb-bda-demo-orders-v1`;
 - `abb-bda-demo-statuses-v1`.
 
-Для полного сброса автономной демонстрации удалите данные сайта в браузере. FIN, OTP и карточные реквизиты в `localStorage` не записываются. Авторизация и незавершённый заказ сбрасываются при перезагрузке страницы.
+Avtonom nümayişi tam sıfırlamaq üçün brauzerdə sayt məlumatlarını silin. FIN, OTP və kart rekvizitləri `localStorage`-a yazılmır. Avtorizasiya və tamamlanmamış sifariş səhifə yeniləndikdə sıfırlanır.
 
-### Полный запуск
+### Tam işəsalma
 
-Новые заказы и статусы хранятся в:
+Yeni sifariş və statuslar burada saxlanır:
 
 ```text
 backend/data/presentation.mv.db
 ```
 
-Они доступны из разных браузеров и сохраняются после перезапуска. Для полного сброса остановите серверы и удалите файлы `backend/data/presentation*`; при следующем запуске схема и seed-данные будут созданы заново.
+Onlar müxtəlif brauzerlərdən əlçatandır və yenidən başladıqdan sonra qalır. Tam sıfırlama üçün serverləri dayandırın və `backend/data/presentation*` fayllarını silin; növbəti işəsalmada sxem və seed məlumatları yenidən yaradılacaq.
 
-## Ограничения демонстрации
+## Nümayiş məhdudiyyətləri
 
-- SMS не отправляется;
-- реальные банковские API не подключены;
-- деньги не списываются;
-- PDF является образцом, а не официальным банковским документом;
-- электронная подпись и доставка документа в посольство не выполняются;
-- панель презентационного фронтенда намеренно открыта без входа;
-- текущий профиль предназначен для локальной или закрытой демонстрации, а не для публичной эксплуатации с реальными данными.
+- SMS göndərilmir;
+- real bank API-ləri qoşulmayıb;
+- pul silinmir;
+- PDF rəsmi bank sənədi deyil, nümunədir;
+- elektron imza və sənədin səfirliyə çatdırılması yerinə yetirilmir;
+- təqdimat frontend-inin paneli qəsdən girişsiz açıqdır;
+- hazırkı profil real məlumatlarla açıq istifadəyə deyil, lokal və ya qapalı nümayişə hesablanıb.
 
-В `index.html` установлен `noindex, nofollow`, а локальный Node-сервер также возвращает `X-Robots-Tag`. Это ограничивает индексацию, но не заменяет пароль или сетевое ограничение для закрытого показа.
+`index.html` faylında `noindex, nofollow` var, lokal Node serveri isə əlavə olaraq `X-Robots-Tag` qaytarır. Bu, indekslənməni məhdudlaşdırır, lakin qapalı nümayiş üçün şifrəni və ya şəbəkə məhdudiyyətini əvəz etmir.

@@ -1,58 +1,58 @@
-# Проверка ABB BDA
+# ABB BDA yoxlaması
 
-Эталон: предоставленный `ABB.pdf`, один большой лист с экранами заказа, вспомогательными окнами и панелью посольства. Исходный код: присланные пользователем HTML и JavaScript. Доступ к исходному Figma-файлу отсутствовал; использован разрешённый пользователем PDF.
+Etalon: sifariş ekranları, köməkçi pəncərələr və səfirlik paneli olan bir böyük vərəqdən ibarət təqdim edilmiş `ABB.pdf`. Mənbə kodu: istifadəçinin göndərdiyi HTML və JavaScript. İlkin Figma faylına giriş olmayıb; istifadəçinin icazə verdiyi PDF-dən istifadə edilib.
 
-## Проверено автоматически
+## Avtomatik yoxlananlar
 
-- Синтаксис JS-модулей и локальные ссылки на ресурсы.
-- Генерация HTML для обоих типов документа и всех этапов.
-- Расчёт диапазонов, включая переход с 31 марта на 28 февраля.
-- Проверка тестовых карт и срока действия на границе месяца.
-- Ошибочный OTP, успешное подтверждение и отказ повторному использованию.
-- Идемпотентность параллельных отправок заказа; повтор после отклонённой оплаты.
-- Сохранение заказа, отсутствие дублей, отображение в панели посольства и изменение статуса.
-- Поиск без результатов, экранирование свободного текста, повреждённый JSON.
-- Фильтрация демонстрационных операций по типу и периоду.
+- JS modullarının sintaksisi və lokal resurs keçidləri.
+- Hər iki sənəd növü və bütün mərhələlər üçün HTML generasiyası.
+- 31 martdan 28 fevrala keçid daxil olmaqla tarix aralıqlarının hesablanması.
+- Test kartlarının və ay sərhədində son istifadə tarixinin yoxlanması.
+- Səhv OTP, uğurlu təsdiq və təkrar istifadənin rədd edilməsi.
+- Paralel sifariş göndərişlərinin idempotentliyi və imtina edilmiş ödənişdən sonra təkrar cəhd.
+- Sifarişin saxlanması, dublikatların olmaması, səfirlik panelində göstərilməsi və status dəyişikliyi.
+- Nəticəsiz axtarış, sərbəst mətnin təhlükəsiz göstərilməsi və zədələnmiş JSON.
+- Demo əməliyyatlarının növ və dövr üzrə süzülməsi.
 
-## Соответствие эталону по исходникам
+## Mənbə koda əsasən etalona uyğunluq
 
-| Элемент | Решение |
+| Element | Həll |
 | --- | --- |
-| Палитра | Сохранены светлый холодный фон, белые поверхности, насыщенный синий, зелёные завершённые этапы |
-| Композиция | Шапка, хлебные крошки, заголовок, индикатор, форма; основной контейнер 1156 px |
-| Карточки документа | Две колонки на широком экране, цена и radio; мобильная версия — одна колонка |
-| Счета и детали | Группы карт/счетов, управление балансом, отдельный блок параметров для каждого выбора |
-| Просмотр и оплата | Миниатюра, подсказка, просмотр, подтверждение, итог и поля тестовой карты |
-| Панель посольства | Тёмная боковая панель, поиск, четыре счётчика, табы, таблица и статусы |
-| Ресурсы | Реальные изображения из PDF; служебные иконки Lucide |
-| Типографика | Системный стек вместо недоступного исходного веб-шрифта |
+| Palitra | Açıq soyuq fon, ağ səthlər, dolğun mavi və tamamlanmış mərhələlərin yaşıl rəngi qorunub |
+| Kompozisiya | Başlıq, naviqasiya zənciri, səhifə başlığı, mərhələ göstəricisi və forma; əsas konteyner 1156 px |
+| Sənəd kartları | Geniş ekranda iki sütun, qiymət və radio düyməsi; mobil versiyada bir sütun |
+| Hesablar və detallar | Kart/hesab qrupları, balans idarəsi və hər seçim üçün ayrıca parametr bloku |
+| Baxış və ödəniş | Miniatür, ipucu, baxış, təsdiq, yekun və test kartı xanaları |
+| Səfirlik paneli | Tünd yan panel, axtarış, dörd sayğac, tablar, cədvəl və statuslar |
+| Resurslar | PDF-dən real şəkillər və Lucide xidmət ikonları |
+| Tipoqrafika | Əlçatan olmayan ilkin veb şrift əvəzinə sistem şrift dəsti |
 
-Это сравнение структуры и кода, **не отчёт о визуальной сверке отрисованного сайта**.
+Bu, struktur və kod müqayisəsidir, **render edilmiş saytın vizual müqayisə hesabatı deyil**.
 
-## Осознанные доработки
+## Şüurlu təkmilləşdirmələr
 
-- Исправлены повторяющиеся/несогласованные названия этапов: документ → получатель/посольство → счета → детали → проверка → оплата → подтверждение.
-- В существующем JS первый документ был заблокирован. Реализованы обе ветки; для выписки добавлены личное использование и другой получатель.
-- Сценарий после OTP больше не зацикливается.
-- Фиксированное отображение срока карты DD/MM заменено на корректное MM/YY (в интерфейсе AA/İİ).
-- Исправлены явные опечатки в азербайджанском тексте и различены описания двух документов.
-- По запросу владельца проекта служебные пометки удалены из интерфейса и PDF. Значения для проверки и технические ограничения вынесены в DEMO_DATA.md.
-- Нерабочие декоративные счётчики/страницы заменены вычисляемыми данными и реальной пагинацией.
-- Для отсутствующей мобильной версии добавлены меню, компактный индикатор, переносы и прокрутка таблицы.
+- Təkrarlanan və uyğun gəlməyən mərhələ adları düzəldilib: sənəd → alıcı/səfirlik → hesablar → detallar → yoxlama → ödəniş → təsdiq.
+- Mövcud JS-də ilk sənəd bağlı idi. Hər iki qol həyata keçirilib; çıxarış üçün şəxsi istifadə və başqa alıcı əlavə olunub.
+- OTP-dən sonrakı ssenari artıq dövrə düşmür.
+- Kart tarixinin sabit DD/MM görünüşü düzgün MM/YY formatı ilə əvəz edilib; interfeysdə AA/İİ göstərilir.
+- Azərbaycan mətnindəki aşkar yazı xətaları düzəldilib və iki sənədin təsvirləri fərqləndirilib.
+- Layihə sahibinin tələbi ilə xidmət qeydləri interfeysdən və PDF-dən çıxarılıb. Yoxlama dəyərləri və texniki məhdudiyyətlər `DEMO_DATA.md` faylına keçirilib.
+- İşləməyən dekorativ sayğac və səhifələr hesablanan məlumatlar və real səhifələmə ilə əvəz edilib.
+- Mövcud olmayan mobil versiya üçün menyu, yığcam göstərici, sətir keçidləri və cədvəl sürüşdürməsi əlavə olunub.
 
-## Проверено в браузере после обновления интерфейса
+## İnterfeys yeniləndikdən sonra brauzer yoxlaması
 
-19 сентября 2026: локальный сервер и Playwright, размеры 1440×1000, 390×844 и 320×740.
+19 sentyabr 2026: lokal server və Playwright; 1440×1000, 390×844 və 320×740 ölçüləri.
 
-- Заголовки при автоматическом фокусе отображаются без рамки.
-- Кнопки и карточки при кликах не получают рамку; Tab сохраняет видимый фокус.
-- Проверен переход клавиатура → мышь и возврат фокуса после закрытия модального окна.
-- Флаги Великобритании и Азербайджана — локальные SVG, загружаются на широком и узком экране.
-- В проверенных формах выбора языка на ширине 320 px нет горизонтального переполнения страницы.
-- Пройден заказ выписки: FİN → OTP → выбор счёта → детали → просмотр → отказ оплаты → успешный повтор → подтверждение → список заказов → панель посольства.
-- Ввод выполняется вручную по DEMO_DATA.md; служебные подсказки и кнопки автозаполнения удалены.
-- PDF скачивается как ABB-document.pdf; проверены читаемость файла библиотекой PDF, количество страниц и отсутствие служебных пометок в метаданных. Текст предпросмотра проверен в DOM.
-- В консоли приложения нет ошибок и предупреждений.
-- Все 8 автоматических тестов проходят; дополнительно проверяют отсутствие служебного текста в шаблонах и совместимость старых номеров заказов со статусами.
+- Avtomatik fokus zamanı başlıqlar çərçivəsiz göstərilir.
+- Klik zamanı düymə və kartlarda fokus çərçivəsi yaranmır; Tab görünən fokusu saxlayır.
+- Klaviaturadan siçana keçid və modal pəncərə bağlandıqdan sonra fokusun geri qayıtması yoxlanılıb.
+- Böyük Britaniya və Azərbaycan bayraqları lokal SVG-dir, geniş və dar ekranda yüklənir.
+- Yoxlanmış dil seçim formalarında 320 px enində səhifənin üfüqi daşması yoxdur.
+- Çıxarış sifarişi tam keçilib: FIN → OTP → hesab seçimi → detallar → baxış → ödəniş imtinası → uğurlu təkrar → təsdiq → sifariş siyahısı → səfirlik paneli.
+- Məlumatlar `DEMO_DATA.md` üzrə əl ilə daxil edilir; xidmət ipucları və avtomatik doldurma düymələri çıxarılıb.
+- PDF `ABB-document.pdf` kimi yüklənir; PDF kitabxanası ilə faylın oxunaqlılığı, səhifə sayı və metadatada xidmət qeydlərinin olmaması yoxlanılıb. Önizləmə mətni DOM-da yoxlanılıb.
+- Tətbiq konsolunda xəta və xəbərdarlıq yoxdur.
+- Hazırkı 18 avtomatik test keçir; onlar əlavə olaraq şablonlarda xidmət mətninin olmamasını və köhnə sifariş nömrələrinin statuslarla uyğunluğunu yoxlayır.
 
-Печать, другие браузеры и точное визуальное соответствие исходному PDF-макету отдельно не проверялись. Реальные банковские интеграции отсутствуют; ограничения описаны в DEMO_DATA.md.
+Çap, digər brauzerlər və ilkin PDF maketinə dəqiq vizual uyğunluq ayrıca yoxlanmayıb. Real bank inteqrasiyaları yoxdur; məhdudiyyətlər `DEMO_DATA.md` faylında təsvir olunub.
