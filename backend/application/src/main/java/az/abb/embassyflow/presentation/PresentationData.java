@@ -22,6 +22,7 @@ public class PresentationData implements ApplicationRunner {
     private record CustomerFixture(long id, String fin, String name, String phone) {}
     private record AccountFixture(long id, long customerId, String number, String currency, String balance, String type) {}
     private record CardFixture(long id, long accountId, String number, String brand, String expiry) {}
+    private record PortalUserFixture(long id, long embassyId, String username, String password, String fullName, String role) {}
 
     public static final List<Product> PRODUCTS = List.of(
         new Product("visa-azn", 101, "AZN", "7575", "2450.80", true),
@@ -74,6 +75,14 @@ public class PresentationData implements ApplicationRunner {
     public static final Map<String, Long> EMBASSIES = Map.of(
             "italy",101L,"france",102L,"usa",103L,"germany",104L,"spain",105L,"uk",106L);
 
+    private static final List<PortalUserFixture> PORTAL_USERS = List.of(
+            new PortalUserFixture(1, 101L, "admin@italy", "demo1234", "Aydan Ahadova", "ADMIN"),
+            new PortalUserFixture(2, 102L, "admin@france", "demo1234", "Marie Dubois", "ADMIN"),
+            new PortalUserFixture(3, 103L, "admin@usa", "demo1234", "John Carter", "ADMIN"),
+            new PortalUserFixture(4, 104L, "admin@germany", "demo1234", "Anna Schmidt", "ADMIN"),
+            new PortalUserFixture(5, 105L, "admin@spain", "demo1234", "Carlos Ruiz", "ADMIN"),
+            new PortalUserFixture(6, 106L, "admin@uk", "demo1234", "Emma Wilson", "ADMIN"));
+
     private final JdbcTemplate jdbc;
     public PresentationData(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
@@ -102,7 +111,15 @@ public class PresentationData implements ApplicationRunner {
             }
         }
         if (count("portal_users", 1) == 0) {
-            jdbc.update("INSERT INTO portal_users(id,embassy_id,username,password,full_name,role,active,created_at,updated_at) VALUES(1,101,'admin@italy','demo1234','Aydan Ahadova','ADMIN',TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");
+            // One portal user per presentation embassy so the demo can drive the real
+            // PortalService.updateStatus path instead of writing order rows directly.
+            for (var user : PORTAL_USERS) {
+                if (count("portal_users", user.id()) == 0) {
+                    jdbc.update("INSERT INTO portal_users(id,embassy_id,username,password,full_name,role,active,created_at,updated_at) VALUES(?,?,?,?,?,?,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)",
+                            user.id(), user.embassyId(), user.username(),
+                            user.password(), user.fullName(), user.role());
+                }
+            }
         }
     }
 

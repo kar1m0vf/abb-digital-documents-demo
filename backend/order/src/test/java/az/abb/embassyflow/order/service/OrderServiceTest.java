@@ -391,4 +391,70 @@ class OrderServiceTest {
         assertEquals(ErrorCodes.UNAUTHORIZED, ex.getCode());
         assertEquals(HttpStatus.UNAUTHORIZED, ex.getHttpStatus());
     }
+
+    @Test
+    void advanceToDelivered_walksThroughProcessingAndSigning() {
+        DocumentOrder order = order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.PAYMENT_RECEIVED);
+        when(orderRepository.findById(501L)).thenReturn(Optional.of(order));
+
+        OrderUpdatedResponse response = orderService.advanceToDelivered(501L);
+
+        assertEquals(OrderStatus.DELIVERED, order.getStatus());
+        assertEquals("DELIVERED", response.status());
+        assertEquals(List.of(TimelineStep.ABB_APPROVED, TimelineStep.DIGITALLY_SIGNED,
+                        TimelineStep.DELIVERED_TO_EMBASSY),
+                order.getTimeline().stream().map(entry -> entry.getStep()).toList());
+    }
+
+    @Test
+    void advanceToDelivered_keepsExistingTimeline() {
+        DocumentOrder order = order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.PAYMENT_RECEIVED);
+        order.addTimeline(TimelineStep.ORDER_RECEIVED);
+        order.addTimeline(TimelineStep.PAYMENT_RECEIVED);
+        when(orderRepository.findById(501L)).thenReturn(Optional.of(order));
+
+        orderService.advanceToDelivered(501L);
+
+        assertEquals(5, order.getTimeline().size());
+        assertEquals(TimelineStep.ORDER_RECEIVED, order.getTimeline().get(0).getStep());
+        assertEquals(TimelineStep.PAYMENT_RECEIVED, order.getTimeline().get(1).getStep());
+        assertEquals(TimelineStep.DELIVERED_TO_EMBASSY, order.getTimeline().get(4).getStep());
+    }
+
+    @Test
+    void advanceToDelivered_alreadyDelivered_isIdempotent() {
+        DocumentOrder order = order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.DELIVERED);
+        when(orderRepository.findById(501L)).thenReturn(Optional.of(order));
+
+        OrderUpdatedResponse response = orderService.advanceToDelivered(501L);
+
+        assertEquals("DELIVERED", response.status());
+        assertEquals(0, order.getTimeline().size());
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void advanceToDelivered_unpaidOrder_throwsConflict() {
+        DocumentOrder order = order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.OTP_VERIFIED);
+        when(orderRepository.findById(501L)).thenReturn(Optional.of(order));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.advanceToDelivered(501L));
+
+        assertEquals(ErrorCodes.CONFLICT, ex.getCode());
+        assertEquals(HttpStatus.CONFLICT, ex.getHttpStatus());
+        assertEquals(OrderStatus.OTP_VERIFIED, order.getStatus());
+        assertEquals(0, order.getTimeline().size());
+    }
+
+    @Test
+    void advanceToDelivered_unknownOrder_throwsNotFound() {
+        when(orderRepository.findById(404L)).thenReturn(Optional.empty());
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.advanceToDelivered(404L));
+
+        assertEquals(ErrorCodes.ORDER_NOT_FOUND, ex.getCode());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getHttpStatus());
+    }
 }

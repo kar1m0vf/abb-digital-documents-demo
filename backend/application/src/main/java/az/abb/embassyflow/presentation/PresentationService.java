@@ -2,12 +2,15 @@ package az.abb.embassyflow.presentation;
 
 import az.abb.embassyflow.common.exception.BusinessException;
 import az.abb.embassyflow.customer.service.CustomerService;
-import az.abb.embassyflow.notification.service.NotificationService;
+import az.abb.embassyflow.embassy.service.PortalUserService;
 import az.abb.embassyflow.order.dao.repository.DocumentOrderRepository;
 import az.abb.embassyflow.order.dto.request.*;
 import az.abb.embassyflow.order.enums.*;
 import az.abb.embassyflow.order.service.OrderService;
 import az.abb.embassyflow.order.service.PaymentService;
+import az.abb.embassyflow.portal.dto.request.UpdateDocumentStatusRequest;
+import az.abb.embassyflow.portal.enums.PortalDocumentStatus;
+import az.abb.embassyflow.portal.service.PortalService;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
@@ -23,16 +26,17 @@ public class PresentationService {
     public record Detail(String language, boolean equivalent, String equivalentCurrency, String period, String operation, String start, String end) {}
     public record Draft(String type, String embassy, String destination, String recipient, String language, List<String> accounts, Map<String, Detail> details, boolean reviewed) {}
     public record Submission(Draft draft, String paymentToken, String idempotencyKey) {}
-    public record OrderView(String id, String customer, String type, String embassy, String destination, String recipient, String language, List<String> accounts, Map<String, Detail> details, boolean reviewed, String date, int price, String status, String paymentStatus, boolean seed) {}
+    public record OrderView(String id, String customer, String type, String embassy, String destination, String recipient, String language, List<String> accounts, Map<String, Detail> details, boolean reviewed, String date, int price, String status, String paymentStatus, boolean seed, String realStatus) {}
     private final PresentationOrderRepository repository;
     private final DocumentOrderRepository orders;
     private final OrderService orderService;
     private final PaymentService paymentService;
     private final CustomerService customerService;
-    private final NotificationService notificationService;
+    private final PortalService portalService;
+    private final PortalUserService portalUserService;
     private final ObjectMapper json;
-    public PresentationService(PresentationOrderRepository repository, DocumentOrderRepository orders, OrderService orderService, PaymentService paymentService, CustomerService customerService, NotificationService notificationService, ObjectMapper json) {
-        this.repository=repository; this.orders=orders; this.orderService=orderService; this.paymentService=paymentService; this.customerService=customerService; this.notificationService=notificationService; this.json=json;
+    public PresentationService(PresentationOrderRepository repository, DocumentOrderRepository orders, OrderService orderService, PaymentService paymentService, CustomerService customerService, PortalService portalService, PortalUserService portalUserService, ObjectMapper json) {
+        this.repository=repository; this.orders=orders; this.orderService=orderService; this.paymentService=paymentService; this.customerService=customerService; this.portalService=portalService; this.portalUserService=portalUserService; this.json=json;
     }
     private BusinessException invalid() { return new BusinessException("VALIDATION_ERROR", "error.validation", HttpStatus.BAD_REQUEST); }
     private void validate(Draft d) {
@@ -83,7 +87,9 @@ public class PresentationService {
                 new BusinessException("VALIDATION_ERROR", "error.validation", HttpStatus.BAD_REQUEST)).id();
         customerService.validateCardForCustomer(cardId, customerId);
         paymentService.pay(orderId, new PayRequest(cardId, "123"), customerId);
-        OrderView result=new OrderView(created.orderNumber(),customer.fullName(),d.type(),d.embassy(),d.destination(),d.recipient(),d.language(),List.copyOf(d.accounts()),Map.copyOf(d.details()),true,Instant.now().toString(),type.getPrice().intValueExact(),"pending","paid",false);
+        // The demo has no bank operator, so the bank step runs inline: approve -> sign -> deliver.
+        var advanced=orderService.advanceToDelivered(orderId);
+        OrderView result=new OrderView(created.orderNumber(),customer.fullName(),d.type(),d.embassy(),d.destination(),d.recipient(),d.language(),List.copyOf(d.accounts()),Map.copyOf(d.details()),true,Instant.now().toString(),type.getPrice().intValueExact(),"pending","paid",false,advanced.status());
         PresentationOrder entity=new PresentationOrder();entity.requestKey=request.idempotencyKey();entity.customerId=customerId;entity.orderId=orderId;entity.orderNumber=result.id();entity.status="pending";entity.payload=json.writeValueAsString(result);repository.save(entity);
         return result;
     }
@@ -106,7 +112,8 @@ public class PresentationService {
     }
     private OrderView view(PresentationOrder entity) {
         OrderView v=json.readValue(entity.payload,OrderView.class);
-        return new OrderView(v.id(),v.customer(),v.type(),v.embassy(),v.destination(),v.recipient(),v.language(),v.accounts(),v.details(),v.reviewed(),v.date(),v.price(),entity.status,v.paymentStatus(),false);
+        String realStatus=orders.findById(entity.orderId).map(order->order.getStatus().name()).orElse(v.realStatus());
+        return new OrderView(v.id(),v.customer(),v.type(),v.embassy(),v.destination(),v.recipient(),v.language(),v.accounts(),v.details(),v.reviewed(),v.date(),v.price(),entity.status,v.paymentStatus(),false,realStatus);
     }
     @Transactional(readOnly=true) public List<OrderView> list() { return repository.findAllByOrderByIdDesc().stream().map(this::view).toList(); }
     @Transactional public OrderView status(String number, String status) {
@@ -114,14 +121,23 @@ public class PresentationService {
         var entity=repository.findByOrderNumber(number).orElseThrow(()->new BusinessException("ORDER_NOT_FOUND","error.order_not_found",HttpStatus.NOT_FOUND));
         if(!view(entity).destination().equals("embassy")) throw invalid();
         if(entity.status.equals(status)) return view(entity);
-        entity.status=status;
         var order=orders.findById(entity.orderId).orElseThrow();
-        order.setStatus(switch(status){case "completed"->OrderStatus.COMPLETED;case "rejected"->OrderStatus.REJECTED;default->OrderStatus.PAYMENT_RECEIVED;});
         if(!status.equals("pending")) {
-            boolean az=order.getLanguage()==Language.AZ;
-            String title=status.equals("completed")?(az?"Sənəd hazırdır":"Document is ready"):(az?"Sifariş rədd edildi":"Order rejected");
-            notificationService.create(entity.customerId,title,number);
+            OrderStatus target=status.equals("completed")?OrderStatus.COMPLETED:OrderStatus.REJECTED;
+            // The real portal can also act on a presentation order, so only drive the transition
+            // when the order is still awaiting the embassy; otherwise just reflect the real state.
+            if(order.getStatus()!=target) {
+                // Go through the real portal flow so the demo exercises the same guards as production:
+                // the embassy may only complete/reject an order that is already DELIVERED.
+                Long portalUserId=portalUserService.findActiveIdByEmbassyId(order.getEmbassyId());
+                if(portalUserId==null) throw new BusinessException("UNAUTHORIZED","error.unauthorized",HttpStatus.UNAUTHORIZED);
+                var request=new UpdateDocumentStatusRequest(
+                        status.equals("completed")?PortalDocumentStatus.COMPLETED:PortalDocumentStatus.REJECTED,
+                        status.equals("rejected")?"Demo tərəfindən rədd edildi":null);
+                portalService.updateStatus(number,request,portalUserId);
+            }
         }
+        entity.status=status;
         return view(entity);
     }
 }

@@ -38,6 +38,16 @@ public class PortalUserService {
                 .orElse(null);
     }
 
+    @Transactional(readOnly = true)
+    public Long findActiveIdByEmbassyId(Long embassyId) {
+        if (embassyId == null) {
+            return null;
+        }
+        return portalUserRepository.findFirstByEmbassyIdAndActiveTrue(embassyId)
+                .map(PortalUser::getId)
+                .orElse(null);
+    }
+
     private static PortalUserInfo toInfo(PortalUser user) {
         return new PortalUserInfo(user.getId(), user.getEmbassyId(), user.getFullName(), user.getRole());
     }

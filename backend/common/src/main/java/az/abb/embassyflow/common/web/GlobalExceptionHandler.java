@@ -15,6 +15,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 
@@ -48,6 +49,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleOptimisticLock(OptimisticLockingFailureException ex,
                                                          HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, ErrorCodes.CONFLICT, "error.conflict", new Object[0], request);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiError> handleNoResource(NoResourceFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, ErrorCodes.NOT_FOUND, "error.not_found", new Object[0], request);
     }
 
     @ExceptionHandler(Exception.class)

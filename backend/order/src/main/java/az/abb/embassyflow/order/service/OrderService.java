@@ -81,8 +81,7 @@ public class OrderService {
         order.setEmbassyId(request.embassyId());
         order.setLanguage(request.language());
 
-        return new OrderUpdatedResponse(order.getId(), order.getEmbassyId(), order.getLanguage(),
-                order.getStatus().name());
+        return toUpdatedResponse(order);
     }
 
     @Transactional
@@ -114,8 +113,7 @@ public class OrderService {
             order.addTimeline(TimelineStep.OTP_VERIFIED);
         }
 
-        return new OrderUpdatedResponse(order.getId(), order.getEmbassyId(), order.getLanguage(),
-                order.getStatus().name());
+        return toUpdatedResponse(order);
     }
 
     @Transactional
@@ -213,6 +211,40 @@ public class OrderService {
                 .toList();
 
         return new CustomerOrdersResponse(orders);
+    }
+
+    /**
+     * Bank-side processing step: approve the paid order, sign it digitally and hand it to the embassy.
+     * Server-side only - the MVP has no bank operator role, so this is driven by the processing job
+     * (or the presentation harness) instead of an HTTP endpoint.
+     */
+    @Transactional
+    public OrderUpdatedResponse advanceToDelivered(Long orderId) {
+        DocumentOrder order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCodes.ORDER_NOT_FOUND, "error.order_not_found", HttpStatus.NOT_FOUND));
+
+        if (order.getStatus() == OrderStatus.DELIVERED) {
+            return toUpdatedResponse(order);
+        }
+
+        if (order.getStatus() != OrderStatus.PAYMENT_RECEIVED) {
+            throw new BusinessException(ErrorCodes.CONFLICT, "error.conflict", HttpStatus.CONFLICT);
+        }
+
+        order.setStatus(OrderStatus.PROCESSING);
+        order.addTimeline(TimelineStep.ABB_APPROVED);
+        order.setStatus(OrderStatus.SIGNED);
+        order.addTimeline(TimelineStep.DIGITALLY_SIGNED);
+        order.setStatus(OrderStatus.DELIVERED);
+        order.addTimeline(TimelineStep.DELIVERED_TO_EMBASSY);
+
+        return toUpdatedResponse(order);
+    }
+
+    private static OrderUpdatedResponse toUpdatedResponse(DocumentOrder order) {
+        return new OrderUpdatedResponse(order.getId(), order.getEmbassyId(), order.getLanguage(),
+                order.getStatus().name());
     }
 
     private static boolean matches(OrderFilter filter, OrderStatus status) {
