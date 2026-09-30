@@ -44,7 +44,7 @@ export function documentHtml(order) {
   const customer = esc(order.customer || demoCustomer.name);
   const asOf = (order.date || new Date().toISOString()).slice(0, 10);
   const date = dateLabel(asOf);
-  const selected = (order.accounts || []).map(id => accounts.find(account => account.id === id)).filter(Boolean);
+  const selected = order.resolvedAccounts || (order.accounts || []).map(id => accounts.find(account => account.id === id)).filter(Boolean);
   const title = english ? (order.type === 'statement' ? 'Account statement' : 'Account balance reference') : type.title;
   const introduction = english
     ? `By this letter “ABB” OJSC, Branch Network and Sales Support Department hereby confirms that ${customer} holds the following accounts with “ABB” OJSC as of ${date}.`
