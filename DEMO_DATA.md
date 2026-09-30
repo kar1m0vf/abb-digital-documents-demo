@@ -104,11 +104,13 @@ Forma Luhn alqoritmini, qüvvədə olan son istifadə tarixini və üçrəqəmli
 
 ## Səfirlik paneli və portal API
 
-Hazırkı interfeysin paneli ayrıca avtorizasiya olmadan açılır:
+Hazırkı interfeysin paneli avtorizasiyasız (demo rejimi) və ya real portal girişi ilə açılır:
 
 ```text
 http://localhost:4173/#/embassy
 ```
+
+`npm run dev` ilə panel dərhal açılır. `npm run dev:full` (presentation profili) real portal API-nə qoşulur və giriş forması göstərir; məlumatlar yalnız giriş etmiş səfirliyə aid olur.
 
 Mənbə portal API-ni birbaşa yoxlamaq üçün backend-də demo hesabı var:
 
@@ -119,7 +121,7 @@ Mənbə portal API-ni birbaşa yoxlamaq üçün backend-də demo hesabı var:
 | Rol | `ADMIN` |
 | Səfirlik | İtaliya |
 
-Razılaşdırılmış hazırkı panel frontendi presentation API-dən istifadə edir və bu giriş formasını göstərmir.
+Altı hesab da mövcuddur: `admin@france`, `admin@usa`, `admin@germany`, `admin@spain`, `admin@uk` — eyni şifrə ilə.
 
 Seed/API-də altı səfirlik var: İtaliya, Fransa, ABŞ, Almaniya, İspaniya və Böyük Britaniya. İstifadəçi interfeysində İtaliya, Fransa, ABŞ, Almaniya və Böyük Britaniya mövcuddur; İspaniya məlumatlarda saxlanılıb, lakin seçimdə gizlədilib.
 
@@ -154,7 +156,7 @@ Bütün məhsullar üçün eyni əməliyyat dəsti istifadə olunur. Məbləğl�
 
 ## Səfirlik panelinin ilkin qeydləri
 
-İlkin sətirlər İtaliyaya aiddir, ingilis dilindən və demo məhsulundan istifadə edir. Tam işəsalmada yeni server sifarişləri bu siyahıya əlavə olunur.
+Demo rejimdə ilkin sətirlər İtaliyaya aiddir, ingilis dilindən və demo məhsulundan istifadə edir. Presentation rejimində eyni sətirlər real portal API-dən gəlir (`AR-2026-…` nömrələri ilə), tam işəsalmada isə yeni server sifarişləri bu siyahıya əlavə olunur.
 
 | Nömrə | Müştəri | Sənəd | Status | Tarix |
 | --- | --- | --- | --- | --- |
