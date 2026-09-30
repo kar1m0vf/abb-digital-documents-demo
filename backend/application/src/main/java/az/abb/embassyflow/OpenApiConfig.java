@@ -1,7 +1,9 @@
 package az.abb.embassyflow;
 
 import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem.HttpMethod;
+import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import java.util.Map;
@@ -20,7 +22,10 @@ public class OpenApiConfig {
         "/api/v1/orders/{orderId}", Set.of(HttpMethod.GET),
         "/api/v1/orders/{orderId}/preview", Set.of(HttpMethod.POST),
         "/api/v1/orders/{orderId}/pay", Set.of(HttpMethod.POST),
-        "/api/v1/orders", Set.of(HttpMethod.GET)
+        "/api/v1/orders", Set.of(HttpMethod.GET),
+        "/api/v1/payments", Set.of(HttpMethod.GET),
+        "/api/v1/notifications", Set.of(HttpMethod.GET),
+        "/api/v1/notifications/{notificationId}/read", Set.of(HttpMethod.PATCH)
     );
 
     private static final Map<String, Set<HttpMethod>> PORTAL_PROTECTED = Map.of(

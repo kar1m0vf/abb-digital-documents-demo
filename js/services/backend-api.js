@@ -1,15 +1,16 @@
 /** Adapter for the local Spring presentation profile. No markup or card data crosses this boundary. */
 export function createBackendApi({baseUrl='/api/v1',fetchImpl=(...args)=>fetch(...args),onOrder=()=>{},onOrders=()=>{},onAccounts=()=>{},timeout=10000}={}) {
-  let token='', revision=0;
+  let token='', customerId='', portalToken='', revision=0;
   const challenges=new Map(), submissions=new Map();
-  async function request(path,{method='GET',body,authorized=false}={}) {
+  async function request(path,{method='GET',body,authorized=false,portal=false}={}) {
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),timeout);
+    const bearer=portal?portalToken:token;
     try {
-      const response=await fetchImpl(`${baseUrl}${path}`,{method,signal:controller.signal,cache:'no-store',headers:{Accept:'application/json','Accept-Language':'az',...(body?{'Content-Type':'application/json'}:{}),...(authorized&&token?{Authorization:`Bearer ${token}`}:{})},...(body?{body:JSON.stringify(body)}:{})});
+      const response=await fetchImpl(`${baseUrl}${path}`,{method,signal:controller.signal,cache:'no-store',headers:{Accept:'application/json','Accept-Language':'az',...(body?{'Content-Type':'application/json'}:{}),...((authorized||portal)&&bearer?{Authorization:`Bearer ${bearer}`}:{})},...(body?{body:JSON.stringify(body)}:{})});
       let data;try{data=await response.json();}catch{throw new Error('Server cavabı oxunmadı. Yenidən cəhd edin.');}
       if(!response.ok) {
-        if(response.status===401)token='';
+        if(response.status===401){if(portal)portalToken='';else token='';}
         const messages={PAYMENT_FAILED:'Ödəniş rədd edildi. Başqa kartla yenidən cəhd edin.',INVALID_OTP:'Kod düzgün deyil və ya müddəti bitib. Yenidən cəhd edin.',CUSTOMER_NOT_FOUND:'FİN kodu üzrə məlumat tapılmadı. Kodu yoxlayın.',UNAUTHORIZED:'Sessiya bitib. FİN kodunu yenidən təsdiqləyin.',CONFLICT:'Sifariş məlumatları dəyişib. Yeni sifariş yaradın.'};
         throw new Error(messages[data.code]||data.message||'Sorğu yerinə yetirilmədi. Yenidən cəhd edin.');
       }
@@ -23,6 +24,7 @@ export function createBackendApi({baseUrl='/api/v1',fetchImpl=(...args)=>fetch(.
     const customer=await request('/auth/fin/verify',{method:'POST',body:{fin}});
     const result=await request('/auth/otp/send',{method:'POST',body:{customerId:customer.customerId}});
     const id=crypto.randomUUID();challenges.clear();challenges.set(id,customer);
+    customerId=customer.customerId;
     return {id,phone:result.sentTo,resendAt:Date.now()+result.expiresInSeconds*1000};
   }
   async function verifyOtp(id,code) {
@@ -57,6 +59,34 @@ export function createBackendApi({baseUrl='/api/v1',fetchImpl=(...args)=>fetch(.
     const result=await request(`/demo/orders/${encodeURIComponent(id)}/status`,{method:'PUT',body:{status}});
     revision++;onOrder(result);return true;
   }
-  function logout(){token='';challenges.clear();submissions.clear();}
-  return {requestOtp,verifyOtp,submitOrder,refreshOrders,updateStatus,logout};
+  async function getOrder(orderId) {
+    return request(`/orders/${encodeURIComponent(orderId)}`,{authorized:true});
+  }
+  async function listNotifications() {
+    return request(`/notifications?${new URLSearchParams({customerId:String(customerId),size:'20'})}`,{authorized:true});
+  }
+  async function readNotification(notificationId) {
+    return request(`/notifications/${encodeURIComponent(notificationId)}/read`,{method:'PATCH',authorized:true});
+  }
+  async function portalLogin(username,password) {
+    const result=await request('/portal/auth/login',{method:'POST',body:{username,password}});
+    if(!result.accessToken)throw new Error('Giriş məlumatları düzgün deyil.');
+    portalToken=result.accessToken;
+    return {embassyName:result.embassyName,userName:result.userName,role:result.role};
+  }
+  async function portalStats() {
+    return request('/portal/stats',{portal:true});
+  }
+  async function portalDocuments({search='',status='ALL',page=0,size=10}={}) {
+    return request(`/portal/documents?${new URLSearchParams({search,status,page:String(page),size:String(size)})}`,{portal:true});
+  }
+  async function portalDocument(documentNumber) {
+    return request(`/portal/documents/${encodeURIComponent(documentNumber)}`,{portal:true});
+  }
+  async function portalUpdateStatus(documentNumber,status,note='') {
+    return request(`/portal/documents/${encodeURIComponent(documentNumber)}/status`,{method:'PUT',portal:true,body:{status,note}});
+  }
+  function portalLogout(){portalToken='';}
+  function logout(){token='';customerId='';portalToken='';challenges.clear();submissions.clear();}
+  return {requestOtp,verifyOtp,submitOrder,refreshOrders,updateStatus,getOrder,listNotifications,readNotification,portalLogin,portalStats,portalDocuments,portalDocument,portalUpdateStatus,portalLogout,logout};
 }

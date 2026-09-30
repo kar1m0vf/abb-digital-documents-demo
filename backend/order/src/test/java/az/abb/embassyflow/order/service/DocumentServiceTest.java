@@ -31,6 +31,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,8 +54,11 @@ class DocumentServiceTest {
 
     @BeforeEach
     void setUp() {
+        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+        messageSource.setBasename("i18n/messages");
+        messageSource.setUseCodeAsDefaultMessage(true);
         documentService = new DocumentService(orderRepository, orderService, customerService,
-                embassyService, "http://localhost:8080/api/v1/portal/documents");
+                embassyService, messageSource, "http://localhost:8080/api/v1/portal/documents");
     }
 
     private DocumentOrder order(OrderStatus status) {
@@ -85,7 +90,7 @@ class DocumentServiceTest {
         when(orderRepository.existsByVerificationCode(org.mockito.ArgumentMatchers.anyString())).thenReturn(false);
         when(customerService.findById(42L)).thenReturn(Optional.of(
                 new CustomerService.CustomerInfo(42L, "Aydan Ahadova", "+994 50 *** ** 82")));
-        when(customerService.accountsFor(42L, 42L)).thenReturn(List.of(
+        when(customerService.accountsByIds(42L, List.of(11L))).thenReturn(List.of(
                 new AccountResponse(11L, "19473526745367352156", Currency.AZN,
                         new BigDecimal("12500.50"), AccountType.CURRENT, List.of())));
         when(embassyService.findName(1L)).thenReturn(Optional.of("İtaliya səfirliyi"));
@@ -109,7 +114,7 @@ class DocumentServiceTest {
         order.setVerificationCode("EF8F3K");
         when(orderService.requireOwnedOrder(501L, 42L)).thenReturn(order);
         when(customerService.findById(42L)).thenReturn(Optional.empty());
-        when(customerService.accountsFor(42L, 42L)).thenReturn(List.of());
+        when(customerService.accountsByIds(42L, List.of(11L))).thenReturn(List.of());
         when(embassyService.findName(1L)).thenReturn(Optional.empty());
 
         PreviewResponse response = documentService.generatePreview(501L, 42L);

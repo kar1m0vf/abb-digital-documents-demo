@@ -18,8 +18,8 @@ import az.abb.embassyflow.customer.enums.Currency;
 import az.abb.embassyflow.customer.service.CustomerService;
 import az.abb.embassyflow.customer.service.CustomerService.CustomerInfo;
 import az.abb.embassyflow.customer.service.CustomerService.CustomerPortalInfo;
-import az.abb.embassyflow.embassy.dao.entity.PortalUser;
-import az.abb.embassyflow.embassy.dao.repository.PortalUserRepository;
+import az.abb.embassyflow.embassy.dto.response.PortalUserInfo;
+import az.abb.embassyflow.embassy.service.PortalUserService;
 import az.abb.embassyflow.notification.service.NotificationService;
 import az.abb.embassyflow.order.dao.entity.DocumentOrder;
 import az.abb.embassyflow.order.dao.entity.OrderItem;
@@ -35,6 +35,7 @@ import az.abb.embassyflow.order.service.DocumentService;
 import az.abb.embassyflow.portal.dto.request.UpdateDocumentStatusRequest;
 import az.abb.embassyflow.portal.dto.response.PortalDocumentDetailResponse;
 import az.abb.embassyflow.portal.dto.response.PortalDocumentItemResponse;
+import az.abb.embassyflow.portal.dto.response.PortalDocumentResponse;
 import az.abb.embassyflow.portal.dto.response.PortalDocumentsResponse;
 import az.abb.embassyflow.portal.dto.response.PortalStatsResponse;
 import az.abb.embassyflow.portal.dto.response.PortalStatusUpdateResponse;
@@ -52,7 +53,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class PortalServiceTest {
@@ -61,7 +61,7 @@ class PortalServiceTest {
     private DocumentOrderRepository orderRepository;
 
     @Mock
-    private PortalUserRepository portalUserRepository;
+    private PortalUserService portalUserService;
 
     @Mock
     private CustomerService customerService;
@@ -77,12 +77,8 @@ class PortalServiceTest {
 
     private static final String DOC = "AR-2026-000512";
 
-    private PortalUser user() {
-        PortalUser user = new PortalUser();
-        ReflectionTestUtils.setField(user, "id", 1L);
-        user.setEmbassyId(1L);
-        user.setActive(true);
-        return user;
+    private PortalUserInfo user() {
+        return new PortalUserInfo(1L, 1L, "Aydan Əhadova", "ADMIN");
     }
 
     private DocumentOrder order(OrderStatus status) {
@@ -114,7 +110,7 @@ class PortalServiceTest {
 
     @Test
     void stats_computesPendingFromTotals() {
-        when(portalUserRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
         when(orderRepository.countByEmbassyId(1L)).thenReturn(10L);
         when(orderRepository.countByEmbassyIdAndStatusIn(1L, Set.of(OrderStatus.DELIVERED, OrderStatus.COMPLETED)))
                 .thenReturn(4L);
@@ -138,7 +134,7 @@ class PortalServiceTest {
 
     @Test
     void documents_filtersPendingAndPaginates() {
-        when(portalUserRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
         DocumentOrder pending = order(OrderStatus.PAYMENT_RECEIVED);
         when(customerService.findById(1L)).thenReturn(Optional.of(new CustomerInfo(1L, "Aydan Ahadova", "+994...")));
         when(orderRepository.findByEmbassyIdOrderByIdDesc(1L))
@@ -155,7 +151,7 @@ class PortalServiceTest {
 
     @Test
     void documents_searchByCustomerName() {
-        when(portalUserRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
         DocumentOrder order = order(OrderStatus.PAYMENT_RECEIVED);
         when(customerService.findById(1L)).thenReturn(Optional.of(new CustomerInfo(1L, "Aydan Ahadova", "+994...")));
         when(orderRepository.findByEmbassyIdOrderByIdDesc(1L)).thenReturn(List.of(order));
@@ -168,7 +164,7 @@ class PortalServiceTest {
 
     @Test
     void documents_paginationSecondPage() {
-        when(portalUserRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
         when(customerService.findById(1L)).thenReturn(Optional.of(new CustomerInfo(1L, "Aydan Ahadova", "+994...")));
         List<DocumentOrder> orders = List.of(
                 order(OrderStatus.PAYMENT_RECEIVED),
@@ -184,7 +180,7 @@ class PortalServiceTest {
 
     @Test
     void documents_negativePage_clampsToFirstPage() {
-        when(portalUserRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
         when(customerService.findById(1L)).thenReturn(Optional.of(new CustomerInfo(1L, "Aydan Ahadova", "+994...")));
         when(orderRepository.findByEmbassyIdOrderByIdDesc(1L))
                 .thenReturn(List.of(order(OrderStatus.PAYMENT_RECEIVED)));
@@ -198,7 +194,7 @@ class PortalServiceTest {
 
     @Test
     void documents_pageBeyondRange_returnsEmptyContent() {
-        when(portalUserRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
         when(customerService.findById(1L)).thenReturn(Optional.of(new CustomerInfo(1L, "Aydan Ahadova", "+994...")));
         when(orderRepository.findByEmbassyIdOrderByIdDesc(1L))
                 .thenReturn(List.of(order(OrderStatus.PAYMENT_RECEIVED)));
@@ -211,14 +207,14 @@ class PortalServiceTest {
 
     @Test
     void documentDetail_returnsEnumNameAndItems() {
-        when(portalUserRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
         DocumentOrder order = order(OrderStatus.OTP_VERIFIED);
         addItem(order);
         order.addTimeline(TimelineStep.ORDER_RECEIVED);
         when(orderRepository.findByOrderNumber(DOC)).thenReturn(Optional.of(order));
         when(customerService.findPortalInfo(1L))
                 .thenReturn(Optional.of(new CustomerPortalInfo(1L, "Aydan Ahadova", "5D7X9Q2")));
-        when(customerService.accountsFor(1L, 1L)).thenReturn(List.of(account()));
+        when(customerService.accountsByIds(1L, List.of(11L))).thenReturn(List.of(account()));
 
         PortalDocumentDetailResponse response = portalService.documentDetail(DOC, 1L);
 
@@ -237,7 +233,7 @@ class PortalServiceTest {
 
     @Test
     void documentDetail_documentOfOtherEmbassy_notFound() {
-        when(portalUserRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
         DocumentOrder order = order(OrderStatus.OTP_VERIFIED);
         order.setEmbassyId(2L);
         when(orderRepository.findByOrderNumber(DOC)).thenReturn(Optional.of(order));
@@ -251,8 +247,8 @@ class PortalServiceTest {
 
     @Test
     void updateStatus_completed_setsStatusAndTimeline() {
-        when(portalUserRepository.findById(1L)).thenReturn(Optional.of(user()));
-        DocumentOrder order = order(OrderStatus.OTP_VERIFIED);
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
+        DocumentOrder order = order(OrderStatus.DELIVERED);
         when(orderRepository.findByOrderNumber(DOC)).thenReturn(Optional.of(order));
 
         PortalStatusUpdateResponse response = portalService.updateStatus(DOC,
@@ -268,8 +264,8 @@ class PortalServiceTest {
 
     @Test
     void updateStatus_rejected_requiresNote() {
-        when(portalUserRepository.findById(1L)).thenReturn(Optional.of(user()));
-        DocumentOrder order = order(OrderStatus.OTP_VERIFIED);
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
+        DocumentOrder order = order(OrderStatus.DELIVERED);
         when(orderRepository.findByOrderNumber(DOC)).thenReturn(Optional.of(order));
 
         BusinessException ex = assertThrows(BusinessException.class,
@@ -283,8 +279,8 @@ class PortalServiceTest {
 
     @Test
     void updateStatus_rejected_setsRejectionNote() {
-        when(portalUserRepository.findById(1L)).thenReturn(Optional.of(user()));
-        DocumentOrder order = order(OrderStatus.OTP_VERIFIED);
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
+        DocumentOrder order = order(OrderStatus.DELIVERED);
         when(orderRepository.findByOrderNumber(DOC)).thenReturn(Optional.of(order));
 
         PortalStatusUpdateResponse response = portalService.updateStatus(DOC,
@@ -299,7 +295,7 @@ class PortalServiceTest {
 
     @Test
     void updateStatus_alreadyTerminal_throwsConflict() {
-        when(portalUserRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
         when(orderRepository.findByOrderNumber(DOC)).thenReturn(Optional.of(order(OrderStatus.COMPLETED)));
 
         BusinessException ex = assertThrows(BusinessException.class,
@@ -308,6 +304,20 @@ class PortalServiceTest {
 
         assertEquals(ErrorCodes.CONFLICT, ex.getCode());
         assertEquals(HttpStatus.CONFLICT, ex.getHttpStatus());
+    }
+
+    @Test
+    void updateStatus_notDelivered_throwsConflict() {
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
+        when(orderRepository.findByOrderNumber(DOC)).thenReturn(Optional.of(order(OrderStatus.OTP_VERIFIED)));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> portalService.updateStatus(DOC,
+                        new UpdateDocumentStatusRequest(PortalDocumentStatus.COMPLETED, null), 1L));
+
+        assertEquals(ErrorCodes.CONFLICT, ex.getCode());
+        assertEquals(HttpStatus.CONFLICT, ex.getHttpStatus());
+        verify(notificationService, never()).create(any(), any(), any());
     }
 
     @Test
@@ -359,10 +369,10 @@ class PortalServiceTest {
 
     @Test
     void download_returnsHtmlAttachment() {
-        when(portalUserRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
         DocumentOrder order = order(OrderStatus.OTP_VERIFIED);
         when(orderRepository.findByOrderNumber(DOC)).thenReturn(Optional.of(order));
-        when(documentService.renderHtml(order)).thenReturn("<html>ABB</html>");
+        when(documentService.renderHtmlForPortal(DOC, 1L)).thenReturn("<html>ABB</html>");
 
         ResponseEntity<byte[]> response = portalService.download(DOC, 1L);
 

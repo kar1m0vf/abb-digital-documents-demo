@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 013-portal-delivered-seed
+      author: embassy-flow
+      changes:
+        - update:
+            tableName: document_orders
+            where: id = 107
+            columns:
+              - column: { name: status, value: "DELIVERED" }
+              - column: { name: updated_at, value: "2026-09-11T12:50:00Z" }
+        - insert:
+            tableName: order_timeline
+            columns:
+              - column: { name: order_id, valueNumeric: 107 }
+              - column: { name: step, value: "DELIVERED_TO_EMBASSY" }
+              - column: { name: created_at, value: "2026-09-11T12:50:00Z" }
+              - column: { name: updated_at, value: "2026-09-11T12:50:00Z" }

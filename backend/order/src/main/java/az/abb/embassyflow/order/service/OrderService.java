@@ -64,6 +64,10 @@ public class OrderService {
                 .orElseThrow(() -> new BusinessException(
                         ErrorCodes.ORDER_NOT_FOUND, "error.order_not_found", HttpStatus.NOT_FOUND));
 
+        if (order.getStatus() != OrderStatus.CREATED) {
+            throw new BusinessException(ErrorCodes.CONFLICT, "error.conflict", HttpStatus.CONFLICT);
+        }
+
         if (order.getDocumentType() == DocumentType.EMBASSY_CERTIFICATE && request.embassyId() == null) {
             throw new BusinessException(
                     ErrorCodes.VALIDATION_ERROR, "error.embassy_required", HttpStatus.BAD_REQUEST);
@@ -77,8 +81,7 @@ public class OrderService {
         order.setEmbassyId(request.embassyId());
         order.setLanguage(request.language());
 
-        return new OrderUpdatedResponse(order.getId(), order.getEmbassyId(), order.getLanguage(),
-                order.getStatus().name());
+        return toUpdatedResponse(order);
     }
 
     @Transactional
@@ -96,14 +99,21 @@ public class OrderService {
                 .orElseThrow(() -> new BusinessException(
                         ErrorCodes.ORDER_NOT_FOUND, "error.order_not_found", HttpStatus.NOT_FOUND));
 
-        order.setCustomerId(customerId);
+        if (order.getCustomerId() != null && !order.getCustomerId().equals(customerId)) {
+            throw new BusinessException(ErrorCodes.CONFLICT, "error.conflict", HttpStatus.CONFLICT);
+        }
+
+        if (order.getStatus() != OrderStatus.CREATED && order.getStatus() != OrderStatus.OTP_VERIFIED) {
+            throw new BusinessException(ErrorCodes.CONFLICT, "error.conflict", HttpStatus.CONFLICT);
+        }
+
         if (order.getStatus() == OrderStatus.CREATED) {
+            order.setCustomerId(customerId);
             order.setStatus(OrderStatus.OTP_VERIFIED);
             order.addTimeline(TimelineStep.OTP_VERIFIED);
         }
 
-        return new OrderUpdatedResponse(order.getId(), order.getEmbassyId(), order.getLanguage(),
-                order.getStatus().name());
+        return toUpdatedResponse(order);
     }
 
     @Transactional
@@ -130,7 +140,14 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public OrderSummaryResponse getOrder(Long orderId, Long authenticatedCustomerId) {
-        DocumentOrder order = requireOwnedOrder(orderId, authenticatedCustomerId);
+        DocumentOrder order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCodes.ORDER_NOT_FOUND, "error.order_not_found", HttpStatus.NOT_FOUND));
+
+        if (order.getStatus() != OrderStatus.CREATED || order.getCustomerId() != null) {
+            requireOwned(order, authenticatedCustomerId);
+        }
+
         String embassyName = order.getEmbassyId() == null
                 ? null
                 : embassyService.findName(order.getEmbassyId()).orElse(null);
@@ -145,12 +162,15 @@ public class OrderService {
         DocumentOrder order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCodes.ORDER_NOT_FOUND, "error.order_not_found", HttpStatus.NOT_FOUND));
+        requireOwned(order, authenticatedCustomerId);
+        return order;
+    }
 
+    private static void requireOwned(DocumentOrder order, Long authenticatedCustomerId) {
         if (authenticatedCustomerId == null || order.getCustomerId() == null
                 || !order.getCustomerId().equals(authenticatedCustomerId)) {
             throw new BusinessException(ErrorCodes.UNAUTHORIZED, "error.unauthorized", HttpStatus.UNAUTHORIZED);
         }
-        return order;
     }
 
     private static OrderItem toItem(OrderItemRequest request) {
@@ -191,6 +211,40 @@ public class OrderService {
                 .toList();
 
         return new CustomerOrdersResponse(orders);
+    }
+
+    /**
+     * Bank-side processing step: approve the paid order, sign it digitally and hand it to the embassy.
+     * Server-side only - the MVP has no bank operator role, so this is driven by the processing job
+     * (or the presentation harness) instead of an HTTP endpoint.
+     */
+    @Transactional
+    public OrderUpdatedResponse advanceToDelivered(Long orderId) {
+        DocumentOrder order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCodes.ORDER_NOT_FOUND, "error.order_not_found", HttpStatus.NOT_FOUND));
+
+        if (order.getStatus() == OrderStatus.DELIVERED) {
+            return toUpdatedResponse(order);
+        }
+
+        if (order.getStatus() != OrderStatus.PAYMENT_RECEIVED) {
+            throw new BusinessException(ErrorCodes.CONFLICT, "error.conflict", HttpStatus.CONFLICT);
+        }
+
+        order.setStatus(OrderStatus.PROCESSING);
+        order.addTimeline(TimelineStep.ABB_APPROVED);
+        order.setStatus(OrderStatus.SIGNED);
+        order.addTimeline(TimelineStep.DIGITALLY_SIGNED);
+        order.setStatus(OrderStatus.DELIVERED);
+        order.addTimeline(TimelineStep.DELIVERED_TO_EMBASSY);
+
+        return toUpdatedResponse(order);
+    }
+
+    private static OrderUpdatedResponse toUpdatedResponse(DocumentOrder order) {
+        return new OrderUpdatedResponse(order.getId(), order.getEmbassyId(), order.getLanguage(),
+                order.getStatus().name());
     }
 
     private static boolean matches(OrderFilter filter, OrderStatus status) {

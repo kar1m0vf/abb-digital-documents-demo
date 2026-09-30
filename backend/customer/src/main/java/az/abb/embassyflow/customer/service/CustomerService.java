@@ -10,6 +10,7 @@ import az.abb.embassyflow.customer.dao.repository.CardRepository;
 import az.abb.embassyflow.customer.dao.repository.CustomerRepository;
 import az.abb.embassyflow.customer.dto.response.AccountResponse;
 import az.abb.embassyflow.customer.dto.response.CardResponse;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
@@ -76,6 +77,22 @@ public class CustomerService {
     }
 
     @Transactional(readOnly = true)
+    public List<AccountResponse> accountsByIds(Long customerId, Collection<Long> accountIds) {
+        if (!customerRepository.existsById(customerId)) {
+            throw new BusinessException(
+                    ErrorCodes.CUSTOMER_NOT_FOUND, "error.customer_not_found", HttpStatus.NOT_FOUND);
+        }
+
+        if (accountIds.isEmpty()) {
+            return List.of();
+        }
+
+        return accountRepository.findByCustomerIdAndIdIn(customerId, accountIds).stream()
+                .map(CustomerService::toAccountResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public void validateAccountForCustomer(Long accountId, Long customerId) {
         if (!accountRepository.existsByIdAndCustomerIdAndActiveTrue(accountId, customerId)) {
             throw new BusinessException(
@@ -88,22 +105,6 @@ public class CustomerService {
         if (!cardRepository.existsByIdAndAccount_CustomerIdAndActiveTrue(cardId, customerId)) {
             throw new BusinessException(ErrorCodes.CARD_NOT_FOUND, "error.card_not_found", HttpStatus.NOT_FOUND);
         }
-    }
-
-    @Transactional(readOnly = true)
-    public Long accountIdForCard(Long cardId, Long customerId) {
-        return cardRepository.findByIdAndAccount_CustomerIdAndActiveTrue(cardId, customerId)
-                .map(card -> card.getAccount().getId())
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCodes.CARD_NOT_FOUND, "error.card_not_found", HttpStatus.NOT_FOUND));
-    }
-
-    @Transactional(readOnly = true)
-    public Long firstActiveCardId(Long customerId) {
-        return cardRepository.findFirstByAccount_CustomerIdAndActiveTrueOrderByIdAsc(customerId)
-                .map(Card::getId)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCodes.CARD_NOT_FOUND, "error.card_not_found", HttpStatus.NOT_FOUND));
     }
 
     private CustomerInfo toInfo(Customer customer) {

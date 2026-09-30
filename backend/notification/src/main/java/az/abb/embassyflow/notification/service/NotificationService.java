@@ -56,6 +56,10 @@ public class NotificationService {
 
     @Transactional
     public NotificationReadResponse markRead(Long notificationId, Long authenticatedCustomerId) {
+        if (authenticatedCustomerId == null) {
+            throw new BusinessException(ErrorCodes.UNAUTHORIZED, "error.unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+
         Notification notification = notificationRepository.findByIdAndCustomerId(notificationId,
                         authenticatedCustomerId)
                 .orElseThrow(() -> new BusinessException(

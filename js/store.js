@@ -1,7 +1,7 @@
 import { accounts, seedInquiries, statuses, documents, embassies } from './data.js';
 import {validRange} from './utils.js';
-import { backendEnabled, remoteOrders, rememberRemoteOrder } from './services/backend-state.js';
-import { updateRemoteStatus } from './services/api-client.js';
+import { backendEnabled, remoteOrders, rememberRemoteOrder, portalState } from './services/backend-state.js';
+import { updateRemoteStatus, portalUpdateStatus } from './services/api-client.js';
 
 export const newDraft = () => ({type:'statement',embassy:'italy',destination:'embassy',recipient:'',language:'en',accounts:[],details:{},reviewed:false});
 export const state = {route:'documents',step:1,substep:'embassy',maxStep:1,authenticated:false,draft:newDraft(),customer:null,showBalances:false,busy:false,error:'',otpDeadline:0,otpPhone:'',challenge:null,order:null,filter:'all',query:'',page:1,embassy:'italy'};
@@ -16,7 +16,7 @@ function safeOrder(o){
 export function getOrders(){const saved=backendEnabled?remoteOrders():read(ORDER_KEY,memoryOrders);const source=Array.isArray(saved)?saved:[];const scoped=backendEnabled&&state.route!=='embassy'?(state.authenticated&&state.customer?source.filter(order=>order.customer===state.customer.name):[]):source;return scoped.filter(safeOrder).slice(0,100).map(o=>{
   const selected=[...new Set(o.accounts)],details={};
   for(const id of selected){const raw=o.details?.[id]||{};const d={language:['en','az'].includes(raw.language)?raw.language:o.language,equivalent:raw.equivalent===true,equivalentCurrency:['RUB','USD','EUR','GBP'].includes(raw.equivalentCurrency)?raw.equivalentCurrency:'RUB',period:['1','3','6','12','custom'].includes(raw.period)?raw.period:'1',operation:['all','income','expense'].includes(raw.operation)?raw.operation:'all',start:typeof raw.start==='string'?raw.start:'',end:typeof raw.end==='string'?raw.end:''};if(d.period==='custom'&&!validRange(d.start,d.end))d.period='1';details[id]=d;}
-  return {id:o.id.replace(/^DEMO-/,'AR-'),type:o.type,customer:o.customer,status:o.status,date:o.date,embassy:o.embassy,language:o.language,destination:['embassy','personal','other'].includes(o.destination)?o.destination:'embassy',recipient:typeof o.recipient==='string'?o.recipient.slice(0,120):'',accounts:selected,details,price:documents[o.type].price,reviewed:true,paymentStatus:'paid',seed:false};
+  return {id:o.id.replace(/^DEMO-/,'AR-'),type:o.type,customer:o.customer,status:o.status,date:o.date,embassy:o.embassy,language:o.language,destination:['embassy','personal','other'].includes(o.destination)?o.destination:'embassy',recipient:typeof o.recipient==='string'?o.recipient.slice(0,120):'',accounts:selected,details,price:documents[o.type].price,reviewed:true,paymentStatus:'paid',seed:false,realStatus:o.realStatus,orderId:o.orderId,timeline:Array.isArray(o.timeline)?o.timeline:[]};
 });}
 export function saveOrder(order){
   if(backendEnabled){rememberRemoteOrder(order);return;}
@@ -31,7 +31,9 @@ export function getInquiries(){
   });
 }
 export function updateStatus(id,status){
-  if(!statuses[status]||!getInquiries().some(o=>o.id===id))return false;
+  if(!statuses[status])return false;
+  if(backendEnabled&&portalState()?.documents.some(o=>o.id===id))return portalUpdateStatus(id,status);
+  if(!getInquiries().some(o=>o.id===id))return false;
   if(backendEnabled&&getOrders().some(o=>o.id===id))return updateRemoteStatus(id,status);
   const raw=read(STATUS_KEY,memoryStatuses);const prev=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
   memoryStatuses={...prev,[id]:status};write(STATUS_KEY,memoryStatuses);return true;

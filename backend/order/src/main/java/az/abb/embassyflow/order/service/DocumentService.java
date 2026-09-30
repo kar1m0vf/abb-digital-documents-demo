@@ -22,11 +22,14 @@ import java.security.SecureRandom;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,16 +48,19 @@ public class DocumentService {
     private final OrderService orderService;
     private final CustomerService customerService;
     private final EmbassyService embassyService;
+    private final MessageSource messageSource;
     private final String verifyBaseUrl;
 
     public DocumentService(DocumentOrderRepository orderRepository, OrderService orderService,
                            CustomerService customerService, EmbassyService embassyService,
+                           MessageSource messageSource,
                            @Value("${app.verify-base-url:http://localhost:8080/api/v1/portal/documents}")
                            String verifyBaseUrl) {
         this.orderRepository = orderRepository;
         this.orderService = orderService;
         this.customerService = customerService;
         this.embassyService = embassyService;
+        this.messageSource = messageSource;
         this.verifyBaseUrl = verifyBaseUrl;
     }
 
@@ -73,9 +79,17 @@ public class DocumentService {
         return new PreviewResponse(order.getOrderNumber(), html, qrCode, verificationCode);
     }
 
-    public String renderHtml(DocumentOrder order) {
+    public String renderHtmlForPortal(String documentNumber, Long embassyId) {
+        DocumentOrder order = requireOwnedByEmbassy(documentNumber, embassyId);
         String code = ensureVerificationCode(order);
         return buildHtml(order, code);
+    }
+
+    private DocumentOrder requireOwnedByEmbassy(String documentNumber, Long embassyId) {
+        return orderRepository.findByOrderNumber(documentNumber)
+                .filter(o -> o.getEmbassyId() != null && o.getEmbassyId().equals(embassyId))
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCodes.DOCUMENT_NOT_FOUND, "error.document_not_found", HttpStatus.NOT_FOUND));
     }
 
     private String ensureVerificationCode(DocumentOrder order) {
@@ -101,52 +115,54 @@ public class DocumentService {
     }
 
     private String buildHtml(DocumentOrder order, String verificationCode) {
-        boolean az = order.getLanguage() == Language.AZ;
-        String title = az ? "Səfirliyə arayış" : "Reference Letter";
-        String customerLabel = az ? "Müştəri" : "Customer";
-        String embassyLabel = az ? "Səfirlik" : "Embassy";
-        String dateLabel = az ? "Tarix" : "Date";
-        String statusLabel = az ? "Status" : "Status";
-        String validLabel = az ? "Etibarlıdır" : "Valid";
-        String totalLabel = az ? "Ümumi məbləğ" : "Total amount";
-        String feeLabel = az ? "Xidmət haqqı" : "Service fee";
-        String commissionLabel = az ? "Əməliyyat komissiyası" : "Transaction commission";
-        String copiesLabel = az ? "Nüsxə sayı" : "Number of copies";
-        String oneUnitLabel = az ? "1 ədəd" : "1 unit";
-        String codeLabel = az ? "Yoxlama kodu" : "Verification code";
-        String noLabel = az ? "Sənəd No" : "Document No";
-        String qrLabel = az ? "QR kodu ilə yoxlayın" : "Verify with the QR code";
-        String signLabel = az ? "Rəqəmsal imza" : "Digital signature";
+        String title = text(order, "doc.title");
+        String customerLabel = text(order, "doc.customer");
+        String embassyLabel = text(order, "doc.embassy");
+        String dateLabel = text(order, "doc.date");
+        String statusLabel = text(order, "doc.status");
+        String validLabel = text(order, "doc.valid");
+        String totalLabel = text(order, "doc.total");
+        String feeLabel = text(order, "doc.fee");
+        String commissionLabel = text(order, "doc.commission");
+        String copiesLabel = text(order, "doc.copies");
+        String oneUnitLabel = text(order, "doc.oneUnit");
+        String codeLabel = text(order, "doc.code");
+        String noLabel = text(order, "doc.no");
+        String qrLabel = text(order, "doc.qr");
+        String signLabel = text(order, "doc.sign");
 
-        String customerName = customerService.findById(order.getCustomerId())
-                .map(CustomerService.CustomerInfo::fullName)
-                .orElse("");
+        String customerName = order.getCustomerId() == null
+                ? ""
+                : customerService.findById(order.getCustomerId())
+                        .map(CustomerService.CustomerInfo::fullName)
+                        .orElse("");
         String embassyName = order.getEmbassyId() == null
                 ? ""
                 : embassyService.findName(order.getEmbassyId()).orElse("");
 
-        Map<Long, AccountResponse> accountsById = customerService
-                .accountsFor(order.getCustomerId(), order.getCustomerId()).stream()
-                .collect(Collectors.toMap(AccountResponse::id, Function.identity()));
+        Map<Long, AccountResponse> accountsById = order.getCustomerId() == null
+                ? Map.of()
+                : customerService.accountsByIds(order.getCustomerId(), itemAccountIds(order)).stream()
+                        .collect(Collectors.toMap(AccountResponse::id, Function.identity()));
 
         StringBuilder rows = new StringBuilder();
         for (OrderItem item : order.getItems()) {
             AccountResponse account = accountsById.get(item.getAccountId());
-            String accountNumber = account == null ? String.valueOf(item.getAccountId()) : account.accountNumber();
+            String accountNumber = account == null ? "—" : account.accountNumber();
             String currency = account == null ? "" : account.currency().name();
             rows.append("<tr>")
                     .append("<td>").append(escape(accountNumber)).append("</td>")
                     .append("<td>").append(escape(currency)).append("</td>")
                     .append("<td>").append(escape(item.getPeriod().getCode())).append("</td>")
                     .append("<td>").append(escape(item.getStatementType().name())).append("</td>")
-                    .append("<td>").append(item.isEquivalentCurrency() ? (az ? "Bəli" : "Yes") : (az ? "Xeyr" : "No"))
+                    .append("<td>").append(item.isEquivalentCurrency() ? text(order, "doc.yes") : text(order, "doc.noValue"))
                     .append("</td>")
                     .append("</tr>");
         }
 
-        String head = "<th>" + (az ? "Hesab" : "Account") + "</th><th>" + (az ? "Valyuta" : "Currency")
-                + "</th><th>" + (az ? "Müddət" : "Period") + "</th><th>" + (az ? "Növ" : "Type")
-                + "</th><th>" + (az ? "Ekvivalent" : "Equivalent") + "</th>";
+        String head = "<th>" + escape(text(order, "doc.account")) + "</th><th>" + escape(text(order, "doc.currency"))
+                + "</th><th>" + escape(text(order, "doc.period")) + "</th><th>" + escape(text(order, "doc.type"))
+                + "</th><th>" + escape(text(order, "doc.equivalent")) + "</th>";
 
         String price = order.getDocumentType().getPrice() + " " + order.getDocumentType().getCurrency();
         String date = order.getCreatedAt() == null ? "" : DATE_FORMAT.format(order.getCreatedAt());
@@ -156,7 +172,7 @@ public class DocumentService {
                 + "display:flex;justify-content:space-between;align-items:center;\">"
                 + "<div><div style=\"font-size:26px;font-weight:700;letter-spacing:1px;\">ABB</div>"
                 + "<div style=\"font-size:12px;opacity:.85;\">"
-                + (az ? "Rəqəmsal Sənəd Sifarişi" : "ABB Digital Document Service") + "</div></div>"
+                + escape(text(order, "doc.abbService")) + "</div></div>"
                 + "<div style=\"text-align:right;\"><div style=\"font-size:18px;font-weight:600;\">"
                 + escape(title) + "</div><div style=\"font-size:12px;opacity:.85;\">"
                 + escape(noLabel) + ": " + escape(order.getOrderNumber()) + "</div></div>"
@@ -198,6 +214,15 @@ public class DocumentService {
                 + "<div style=\"text-align:right;margin-top:26px;font-size:12px;color:#555;\">"
                 + "... ...<div style=\"margin-top:4px;\">" + escape(signLabel) + " | ABB</div></div>"
                 + "</div></div>";
+    }
+
+    private String text(DocumentOrder order, String key) {
+        Locale locale = order.getLanguage() == Language.EN ? Locale.ENGLISH : Locale.forLanguageTag("az");
+        return messageSource.getMessage(key, null, locale);
+    }
+
+    private static List<Long> itemAccountIds(DocumentOrder order) {
+        return order.getItems().stream().map(OrderItem::getAccountId).toList();
     }
 
     private static String toQrDataUri(String content) {

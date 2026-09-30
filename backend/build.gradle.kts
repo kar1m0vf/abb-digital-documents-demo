@@ -17,8 +17,9 @@ subprojects {
     plugins.withType<JavaPlugin>().configureEach {
         extensions.configure<JavaPluginExtension> {
             toolchain {
-                val requestedVersion = providers.gradleProperty("javaVersion")
-                    .orElse(JavaVersion.current().majorVersion)
+                // Pinned to 21 to match options.release below, so the build never
+                // depends on whichever JVM happens to be on PATH.
+                val requestedVersion = providers.gradleProperty("javaVersion").orElse("21")
                 languageVersion.set(JavaLanguageVersion.of(requestedVersion.get().toInt()))
             }
         }

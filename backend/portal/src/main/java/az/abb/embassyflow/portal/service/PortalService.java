@@ -5,8 +5,8 @@ import az.abb.embassyflow.common.exception.ErrorCodes;
 import az.abb.embassyflow.customer.dto.response.AccountResponse;
 import az.abb.embassyflow.customer.service.CustomerService;
 import az.abb.embassyflow.customer.service.CustomerService.CustomerInfo;
-import az.abb.embassyflow.embassy.dao.entity.PortalUser;
-import az.abb.embassyflow.embassy.dao.repository.PortalUserRepository;
+import az.abb.embassyflow.embassy.dto.response.PortalUserInfo;
+import az.abb.embassyflow.embassy.service.PortalUserService;
 import az.abb.embassyflow.notification.service.NotificationService;
 import az.abb.embassyflow.order.dao.entity.DocumentOrder;
 import az.abb.embassyflow.order.dao.entity.OrderItem;
@@ -46,16 +46,16 @@ public class PortalService {
             Set.of(OrderStatus.DELIVERED, OrderStatus.COMPLETED);
 
     private final DocumentOrderRepository orderRepository;
-    private final PortalUserRepository portalUserRepository;
+    private final PortalUserService portalUserService;
     private final CustomerService customerService;
     private final DocumentService documentService;
     private final NotificationService notificationService;
 
-    public PortalService(DocumentOrderRepository orderRepository, PortalUserRepository portalUserRepository,
+    public PortalService(DocumentOrderRepository orderRepository, PortalUserService portalUserService,
                          CustomerService customerService, DocumentService documentService,
                          NotificationService notificationService) {
         this.orderRepository = orderRepository;
-        this.portalUserRepository = portalUserRepository;
+        this.portalUserService = portalUserService;
         this.customerService = customerService;
         this.documentService = documentService;
         this.notificationService = notificationService;
@@ -122,7 +122,7 @@ public class PortalService {
         Long embassyId = requireEmbassy(portalUserId);
         DocumentOrder order = findOwned(documentNumber, embassyId);
 
-        if (order.getStatus() == OrderStatus.COMPLETED || order.getStatus() == OrderStatus.REJECTED) {
+        if (order.getStatus() != OrderStatus.DELIVERED) {
             throw new BusinessException(ErrorCodes.CONFLICT, "error.conflict", HttpStatus.CONFLICT);
         }
 
@@ -196,7 +196,7 @@ public class PortalService {
         Long embassyId = requireEmbassy(portalUserId);
         DocumentOrder order = findOwned(documentNumber, embassyId);
 
-        String html = documentService.renderHtml(order);
+        String html = documentService.renderHtmlForPortal(documentNumber, embassyId);
         String filename = order.getOrderNumber() + ".html";
         byte[] body = html.getBytes(StandardCharsets.UTF_8);
 
@@ -207,13 +207,11 @@ public class PortalService {
     }
 
     private Long requireEmbassy(Long portalUserId) {
-        if (portalUserId == null) {
+        PortalUserInfo user = portalUserService.findActiveById(portalUserId);
+        if (user == null) {
             throw unauthorized();
         }
-        PortalUser user = portalUserRepository.findById(portalUserId)
-                .filter(u -> Boolean.TRUE.equals(u.getActive()))
-                .orElseThrow(this::unauthorized);
-        return user.getEmbassyId();
+        return user.embassyId();
     }
 
     private BusinessException unauthorized() {
@@ -239,7 +237,8 @@ public class PortalService {
         if (order.getCustomerId() == null) {
             return Map.of();
         }
-        return customerService.accountsFor(order.getCustomerId(), order.getCustomerId()).stream()
+        List<Long> accountIds = order.getItems().stream().map(OrderItem::getAccountId).toList();
+        return customerService.accountsByIds(order.getCustomerId(), accountIds).stream()
                 .collect(Collectors.toMap(AccountResponse::id, Function.identity()));
     }
 
