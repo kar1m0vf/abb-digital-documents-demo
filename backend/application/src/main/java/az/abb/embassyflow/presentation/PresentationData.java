@@ -1,6 +1,10 @@
 package az.abb.embassyflow.presentation;
 
+import az.abb.embassyflow.order.enums.DocumentType;
+import az.abb.embassyflow.order.enums.OrderStatus;
+import az.abb.embassyflow.order.enums.TimelineStep;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import org.springframework.boot.ApplicationArguments;
@@ -23,6 +27,8 @@ public class PresentationData implements ApplicationRunner {
     private record AccountFixture(long id, long customerId, String number, String currency, String balance, String type) {}
     private record CardFixture(long id, long accountId, String number, String brand, String expiry) {}
     private record PortalUserFixture(long id, long embassyId, String username, String password, String fullName, String role) {}
+    private record SeedOrder(String orderNumber, DocumentType documentType, String language, OrderStatus status,
+                             long embassyId, long customerId, long accountId, String createdAt, List<TimelineStep> steps) {}
 
     public static final List<Product> PRODUCTS = List.of(
         new Product("visa-azn", 101, "AZN", "7575", "2450.80", true),
@@ -83,6 +89,29 @@ public class PresentationData implements ApplicationRunner {
             new PortalUserFixture(5, 105L, "admin@spain", "demo1234", "Carlos Ruiz", "ADMIN"),
             new PortalUserFixture(6, 106L, "admin@uk", "demo1234", "Emma Wilson", "ADMIN"));
 
+    // Ascending document number: the portal lists newest first by id.
+    private static final List<SeedOrder> SEED_ORDERS = List.of(
+            seed("AR-2026-000087", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.PAYMENT_RECEIVED, 102L, 10L, 12L, "2026-09-03 08:30:00", false),
+            seed("AR-2026-000091", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.REJECTED, 102L, 9L, 11L, "2026-09-05 15:10:00", true),
+            seed("AR-2026-000098", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.DELIVERED, 101L, 8L, 10L, "2026-09-08 10:45:00", true),
+            seed("AR-2026-000103", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.PAYMENT_RECEIVED, 101L, 7L, 9L, "2026-09-10 13:25:00", false),
+            seed("AR-2026-000118", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.DELIVERED, 101L, 5L, 6L, "2026-09-12 09:15:00", true),
+            seed("AR-2026-000124", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.REJECTED, 101L, 4L, 5L, "2026-09-14 16:40:00", true),
+            seed("AR-2026-000125", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.DELIVERED, 101L, 3L, 4L, "2026-09-15 11:05:00", true),
+            seed("AR-2026-000471", DocumentType.ACCOUNT_STATEMENT, "EN", OrderStatus.PAYMENT_RECEIVED, 101L, 6L, 8L, "2026-09-16 14:20:00", false),
+            seed("AR-2026-000489", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.PAYMENT_RECEIVED, 101L, 2L, 3L, "2026-09-17 09:30:00", false),
+            seed("AR-2026-000512", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.DELIVERED, 101L, 1L, 1L, "2026-09-18 10:00:00", true));
+
+    private static SeedOrder seed(String orderNumber, DocumentType documentType, String language,
+                                  OrderStatus status, long embassyId, long customerId, long accountId,
+                                  String createdAt, boolean delivered) {
+        List<TimelineStep> steps = delivered
+                ? List.of(TimelineStep.ORDER_RECEIVED, TimelineStep.OTP_VERIFIED, TimelineStep.PAYMENT_RECEIVED,
+                        TimelineStep.ABB_APPROVED, TimelineStep.DIGITALLY_SIGNED, TimelineStep.DELIVERED_TO_EMBASSY)
+                : List.of(TimelineStep.ORDER_RECEIVED, TimelineStep.OTP_VERIFIED, TimelineStep.PAYMENT_RECEIVED);
+        return new SeedOrder(orderNumber, documentType, language, status, embassyId, customerId, accountId, createdAt, steps);
+    }
+
     private final JdbcTemplate jdbc;
     public PresentationData(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
@@ -121,6 +150,32 @@ public class PresentationData implements ApplicationRunner {
                 }
             }
         }
+
+        // Keep generated order numbers clear of the seeded range (order_number is unique).
+        jdbc.execute("ALTER SEQUENCE order_no_seq RESTART WITH 6001");
+        for (var order : SEED_ORDERS) {
+            if (countBy("document_orders", "order_number", order.orderNumber()) != 0) {
+                continue;
+            }
+            BigDecimal price = order.documentType().getPrice();
+            // No explicit id: the sequence keeps the seeded rows older than later server orders.
+            jdbc.update("INSERT INTO document_orders(document_type,language,status,order_number,embassy_id,customer_id,version,created_at,updated_at) VALUES(?,?,?,?,?,?,0,?,?)",
+                    order.documentType().name(), order.language(), order.status().name(), order.orderNumber(),
+                    order.embassyId(), order.customerId(), Timestamp.valueOf(order.createdAt()), Timestamp.valueOf(order.createdAt()));
+            long orderId = jdbc.queryForObject("SELECT id FROM document_orders WHERE order_number = ?",
+                    Long.class, order.orderNumber());
+            jdbc.update("INSERT INTO order_items(order_id,account_id,language,period,statement_type,equivalent_currency,created_at,updated_at) VALUES(?,?,?,'3M','ALL',FALSE,?,?)",
+                    orderId, order.accountId(), order.language(), Timestamp.valueOf(order.createdAt()), Timestamp.valueOf(order.createdAt()));
+            for (var step : order.steps()) {
+                jdbc.update("INSERT INTO order_timeline(order_id,step,created_at,updated_at) VALUES(?,?,?,?)",
+                        orderId, step.name(), Timestamp.valueOf(order.createdAt()), Timestamp.valueOf(order.createdAt()));
+            }
+            Long cardId = jdbc.queryForObject("SELECT id FROM cards WHERE account_id = ? ORDER BY id LIMIT 1",
+                    Long.class, order.accountId());
+            jdbc.update("INSERT INTO payments(order_id,card_id,amount,currency,status,transaction_no,created_at,updated_at) VALUES(?,?,?,?,'SUCCESS',?,?,?)",
+                    orderId, cardId, price, order.documentType().getCurrency(), "TXN-SEED-" + order.orderNumber(),
+                    Timestamp.valueOf(order.createdAt()), Timestamp.valueOf(order.createdAt()));
+        }
     }
 
     private void seedCustomer(CustomerFixture value) {
@@ -146,5 +201,9 @@ public class PresentationData implements ApplicationRunner {
 
     private int count(String table, long id) {
         return jdbc.queryForObject("SELECT COUNT(*) FROM " + table + " WHERE id = ?", Integer.class, id);
+    }
+
+    private int countBy(String table, String column, String value) {
+        return jdbc.queryForObject("SELECT COUNT(*) FROM " + table + " WHERE " + column + " = ?", Integer.class, value);
     }
 }
