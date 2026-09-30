@@ -1,0 +1,24 @@
+services:
+  app:
+    build: .
+    container_name: abb-digital-documents-app
+    restart: unless-stopped
+    environment:
+      PORT: 4173
+      BACKEND_PORT: 8080
+      HOST: 0.0.0.0
+    volumes:
+      - ./backend/data:/app/backend/data
+    expose:
+      - "4173"
+
+  nginx:
+    image: nginx:alpine
+    container_name: abb-digital-documents-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app

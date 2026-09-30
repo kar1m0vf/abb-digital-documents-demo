@@ -1,0 +1,15 @@
+node_modules/
+.git/
+.vscode/
+.playwright-cli/
+
+backend/.gradle/
+backend/.gradle-cache/
+backend/**/build/
+backend/data/
+
+*.log
+.env
+
+Dockerfile
+docker-compose.yml

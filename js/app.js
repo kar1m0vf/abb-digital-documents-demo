@@ -9,7 +9,7 @@ import { ordersView, productsView } from './views/orders.js';
 import { openModal, closeModal, showDocument, toast, finHelp, phoneHelp } from './modal.js';
 import { requestOtp, verifyOtp, submitOrder, refreshOrders, logout, DEMO, portalLogin as signInPortal, loadPortal, portalDocumentDetail, notificationList, notificationRead, orderDetail } from './services/api-client.js';
 import { backendEnabled, portalState } from './services/backend-state.js';
-import { cleanCode, validFin, validOtp, validRange, validCard, validExpiry, escapeHtml as esc, icon, dateLabel } from './utils.js';
+import { cleanCode, validFin, validOtp, validRange, validCard, validExpiry, generateUUID, escapeHtml as esc, icon, dateLabel } from './utils.js';
 
 import { clearMotion, revealEquivalent, showCardBack, animateConfirmation } from './motion.js';
 import { closeSelect, installSelects } from './select.js';
@@ -20,7 +20,8 @@ document.addEventListener('pointerdown',()=>{document.documentElement.dataset.in
 document.addEventListener('keydown',event=>{
   if(['Tab','Enter',' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Escape'].includes(event.key))document.documentElement.dataset.inputModality='keyboard';
 },true);
-let timer=null;let lastFin='';let paymentKey=crypto.randomUUID();
+
+let timer=null;let lastFin='';let paymentKey=generateUUID();
 const routes=new Set(['documents','orders','payments','accounts','cards','embassy']);
 
 function render({focus=false}={}){
@@ -95,7 +96,7 @@ function next(){
     }else if(validateDetails()){if(state.draft.type==='statement')transition(4,'destination');else transition(5);}
     return;
   }
-  if(state.step===5){if(!state.draft.reviewed){setError('Sənəddəki məlumatları təsdiqləyin.');return;}paymentKey=crypto.randomUUID();transition(6);}
+  if(state.step===5){if(!state.draft.reviewed){setError('Sənəddəki məlumatları təsdiqləyin.');return;}paymentKey=generateUUID();transition(6);}
 }
 function back(){
   if(state.step===2&&state.substep==='otp'){transition(2,'fin');return;}
@@ -166,7 +167,7 @@ async function viewInquiry(id){
   const order=getInquiries().find(o=>o.id===id)||getOrders().find(o=>o.id===id);
   if(order)showDocument(order);
 }
-function beginNewOrder(){resetDraft();paymentKey=crypto.randomUUID();navigate('documents');}
+function beginNewOrder(){resetDraft();paymentKey=generateUUID();navigate('documents');}
 function startNewOrder(){if(state.step>1&&state.step<7&&state.draft.accounts.length){openModal('Yeni sifariş başlasın?', '<p>Cari sifarişin seçimləri silinəcək. Əvvəl yaradılmış sifarişləriniz saxlanılacaq.</p>',{footer:button('Davam et','confirm-new')+button('Geri','close-modal','secondary')});}else beginNewOrder();}
 
 document.addEventListener('click',async event=>{

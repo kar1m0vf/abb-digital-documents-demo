@@ -1,4 +1,5 @@
 /** Adapter for the local Spring presentation profile. No markup or card data crosses this boundary. */
+import { generateUUID } from '../utils.js';
 export function createBackendApi({baseUrl='/api/v1',fetchImpl=(...args)=>fetch(...args),onOrder=()=>{},onOrders=()=>{},onAccounts=()=>{},timeout=10000}={}) {
   let token='', customerId='', portalToken='', revision=0;
   const challenges=new Map(), submissions=new Map();
@@ -23,7 +24,7 @@ export function createBackendApi({baseUrl='/api/v1',fetchImpl=(...args)=>fetch(.
   async function requestOtp(fin) {
     const customer=await request('/auth/fin/verify',{method:'POST',body:{fin}});
     const result=await request('/auth/otp/send',{method:'POST',body:{customerId:customer.customerId}});
-    const id=crypto.randomUUID();challenges.clear();challenges.set(id,customer);
+    const id=generateUUID();challenges.clear();challenges.set(id,customer);
     customerId=customer.customerId;
     return {id,phone:result.sentTo,resendAt:Date.now()+result.expiresInSeconds*1000};
   }

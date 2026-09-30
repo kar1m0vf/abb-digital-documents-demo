@@ -7,6 +7,14 @@ export const today = () => { const d=new Date(); return `${d.getFullYear()}-${St
 export const cleanCode = (value,numeric=false) => value.toUpperCase().replace(numeric ? /[^0-9]/g : /[^A-Z0-9]/g,'');
 export const validFin = value => /^[A-Z0-9]{7}$/.test(value);
 export const validOtp = value => /^\d{6}$/.test(value);
+// crypto.randomUUID only exists in secure contexts (HTTPS or localhost). The demo is
+// served over plain HTTP by IP, so fall back to a v4-shaped id instead of crashing.
+export function generateUUID(){
+  if(globalThis.crypto?.randomUUID)return globalThis.crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{
+    const r=Math.random()*16|0;return (c==='x'?r:r&0x3|0x8).toString(16);
+  });
+}
 export function validCard(value) {
   const n=value.replace(/\s/g,''); if (!/^\d{16}$/.test(n)) return false;
   let sum=0; for(let i=n.length-1,alt=false;i>=0;i--,alt=!alt){let x=+n[i];if(alt){x*=2;if(x>9)x-=9;}sum+=x;} return sum%10===0;
