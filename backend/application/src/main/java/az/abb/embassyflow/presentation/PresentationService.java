@@ -26,7 +26,7 @@ public class PresentationService {
     public record Detail(String language, boolean equivalent, String equivalentCurrency, String period, String operation, String start, String end) {}
     public record Draft(String type, String embassy, String destination, String recipient, String language, List<String> accounts, Map<String, Detail> details, boolean reviewed) {}
     public record Submission(Draft draft, String paymentToken, String idempotencyKey) {}
-    public record OrderView(String id, String customer, String type, String embassy, String destination, String recipient, String language, List<String> accounts, Map<String, Detail> details, boolean reviewed, String date, int price, String status, String paymentStatus, boolean seed, String realStatus) {}
+    public record OrderView(String id, Long orderId, String customer, String type, String embassy, String destination, String recipient, String language, List<String> accounts, Map<String, Detail> details, boolean reviewed, String date, int price, String status, String paymentStatus, boolean seed, String realStatus) {}
     private final PresentationOrderRepository repository;
     private final DocumentOrderRepository orders;
     private final OrderService orderService;
@@ -79,17 +79,21 @@ public class PresentationService {
         }).toList();
         orderService.addItems(orderId,new AddOrderItemsRequest(items),customerId);
         // Presentation token represents the existing test-card form, never real PAN/CVV.
-        // Pick the first card of the first account in the order and validate ownership.
-        long firstAccountId = items.getFirst().accountId();
-        var cards = customerService.accountsByIds(customerId, List.of(firstAccountId))
-                .stream().flatMap(a -> a.cards().stream()).toList();
-        long cardId = cards.stream().findFirst().orElseThrow(() ->
+        // Use the first card of the ordered accounts, otherwise any card the customer owns.
+        var cards = items.stream().map(OrderItemRequest::accountId).distinct()
+                .map(id -> customerService.accountsByIds(customerId, List.of(id)).stream().findFirst().orElse(null))
+                .filter(Objects::nonNull)
+                .flatMap(a -> a.cards().stream()).toList();
+        var owned = cards.isEmpty()
+                ? customerService.accountsFor(customerId, customerId).stream().flatMap(a -> a.cards().stream()).toList()
+                : cards;
+        long cardId = owned.stream().findFirst().orElseThrow(() ->
                 new BusinessException("VALIDATION_ERROR", "error.validation", HttpStatus.BAD_REQUEST)).id();
         customerService.validateCardForCustomer(cardId, customerId);
         paymentService.pay(orderId, new PayRequest(cardId, "123"), customerId);
         // The demo has no bank operator, so the bank step runs inline: approve -> sign -> deliver.
         var advanced=orderService.advanceToDelivered(orderId);
-        OrderView result=new OrderView(created.orderNumber(),customer.fullName(),d.type(),d.embassy(),d.destination(),d.recipient(),d.language(),List.copyOf(d.accounts()),Map.copyOf(d.details()),true,Instant.now().toString(),type.getPrice().intValueExact(),"pending","paid",false,advanced.status());
+        OrderView result=new OrderView(created.orderNumber(),orderId,customer.fullName(),d.type(),d.embassy(),d.destination(),d.recipient(),d.language(),List.copyOf(d.accounts()),Map.copyOf(d.details()),true,Instant.now().toString(),type.getPrice().intValueExact(),"pending","paid",false,advanced.status());
         PresentationOrder entity=new PresentationOrder();entity.requestKey=request.idempotencyKey();entity.customerId=customerId;entity.orderId=orderId;entity.orderNumber=result.id();entity.status="pending";entity.payload=json.writeValueAsString(result);repository.save(entity);
         return result;
     }
@@ -113,7 +117,7 @@ public class PresentationService {
     private OrderView view(PresentationOrder entity) {
         OrderView v=json.readValue(entity.payload,OrderView.class);
         String realStatus=orders.findById(entity.orderId).map(order->order.getStatus().name()).orElse(v.realStatus());
-        return new OrderView(v.id(),v.customer(),v.type(),v.embassy(),v.destination(),v.recipient(),v.language(),v.accounts(),v.details(),v.reviewed(),v.date(),v.price(),entity.status,v.paymentStatus(),false,realStatus);
+        return new OrderView(v.id(),entity.orderId,v.customer(),v.type(),v.embassy(),v.destination(),v.recipient(),v.language(),v.accounts(),v.details(),v.reviewed(),v.date(),v.price(),entity.status,v.paymentStatus(),false,realStatus);
     }
     @Transactional(readOnly=true) public List<OrderView> list() { return repository.findAllByOrderByIdDesc().stream().map(this::view).toList(); }
     @Transactional public OrderView status(String number, String status) {
