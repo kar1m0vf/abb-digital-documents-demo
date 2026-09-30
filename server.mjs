@@ -18,7 +18,7 @@ export function createAppServer({backendUrl=''}={}) {
       res.end(`const mode=new URLSearchParams(globalThis.location?.search||'').get('mode')==='demo'?'demo':${JSON.stringify(mode)};export const config=Object.freeze({mode,apiBase:'/api/v1'});`);return;
     }
     if(pathname.startsWith('/api/')){
-      if(!backend||!pathname.startsWith('/api/v1/')||!['GET','POST','PUT'].includes(req.method)){res.writeHead(404,{'Content-Type':'application/json'});res.end(JSON.stringify({message:'API is not enabled.'}));return;}
+      if(!backend||!pathname.startsWith('/api/v1/')||!['GET','POST','PUT','PATCH'].includes(req.method)){res.writeHead(404,{'Content-Type':'application/json'});res.end(JSON.stringify({message:'API is not enabled.'}));return;}
       const chunks=[];let size=0;
       for await(const chunk of req){size+=chunk.length;if(size>65536){res.writeHead(413,{'Content-Type':'application/json'});res.end(JSON.stringify({message:'Request too large.'}));return;}chunks.push(chunk);}
       try{
