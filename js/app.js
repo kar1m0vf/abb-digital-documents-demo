@@ -31,7 +31,7 @@ function render({focus=false}={}){
   clearMotion();
   clearInterval(timer);document.body.classList.toggle('embassy-mode',state.route==='embassy');
   header.innerHTML=renderHeader();document.documentElement.lang=state.route==='embassy'?'en':'az';
-  document.title=state.route==='embassy'?'Embassy Inquiries — Presentation prototype':'Rəqəmsal Sənəd Sifarişi — Təqdimat prototipi';
+  document.title=state.route==='embassy'?'Embassy Inquiries':'Rəqəmsal Sənəd Sifarişi';
   if(state.route==='embassy')main.innerHTML=backendEnabled&&!portalState()?portalLogin():dashboard();
   else if(state.route==='orders')main.innerHTML=shell(ordersView(),{wizard:false,title:'Sifarişlərim',description:'Sənədlərinizi açın və sifarişlərin statusunu izləyin.'});
   else if(state.route==='payments')main.innerHTML=shell(ordersView(true),{wizard:false,title:'Ödənişlər',description:'Sənəd sifarişləri üzrə ödəniş tarixçəsi.'});

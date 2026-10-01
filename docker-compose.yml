@@ -7,8 +7,11 @@ services:
       PORT: 4173
       BACKEND_PORT: 8080
       HOST: 0.0.0.0
+      JAVA_TOOL_OPTIONS: "-Xmx384m -XX:MaxMetaspaceSize=256m"
     volumes:
       - ./backend/data:/app/backend/data
+      - ./backend/.gradle-cache:/app/backend/.gradle-cache
+      - ./backend/gradle.properties:/app/backend/gradle.properties:ro
     expose:
       - "4173"
 
