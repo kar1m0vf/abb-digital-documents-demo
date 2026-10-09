@@ -91,3 +91,15 @@ dialog.phone-modal{width:min(640px,calc(100% - 32px));padding:30px 40px 65px;bor
  .wizard[data-stage="4"] #details-form>.form-actions{margin-top:60px}
 }
 
+.dashboard.dashboard-login{grid-template-columns:minmax(0,1fr);min-height:100vh;min-height:100dvh}
+.dashboard-login .dashboard-main{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+.dashboard-login .dashboard-content{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 24px}
+.dashboard-login .panel{width:min(100%,440px);max-width:440px;margin:0}
+.password-wrap{position:relative}
+.password-wrap input{padding-right:46px}
+.password-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:38px;height:38px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer}
+.password-toggle:hover{color:var(--blue);background:var(--blue-soft)}
+.password-toggle:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.reject-note{width:100%;box-sizing:border-box;border:1px solid #ced4df;border-radius:10px;padding:13px 15px;font:inherit;font-size:15px;color:var(--ink);background:#fff;resize:vertical;outline:none;transition:border-color .15s,box-shadow .15s}
+.reject-note:focus{border-color:var(--blue);box-shadow:0 0 0 3px #0b63ed12}
+

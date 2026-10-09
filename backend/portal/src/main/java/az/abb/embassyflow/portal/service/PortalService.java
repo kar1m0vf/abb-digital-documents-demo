@@ -42,8 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PortalService {
 
-    private static final Set<OrderStatus> COMPLETED_STATUSES =
-            Set.of(OrderStatus.DELIVERED, OrderStatus.COMPLETED);
+    private static final Set<OrderStatus> COMPLETED_STATUSES = Set.of(OrderStatus.COMPLETED);
 
     private final DocumentOrderRepository orderRepository;
     private final PortalUserService portalUserService;

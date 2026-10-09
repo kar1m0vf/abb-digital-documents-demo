@@ -91,15 +91,15 @@ public class PresentationData implements ApplicationRunner {
 
     // Ascending document number: the portal lists newest first by id.
     private static final List<SeedOrder> SEED_ORDERS = List.of(
-            seed("AR-2026-000087", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.PAYMENT_RECEIVED, 102L, 10L, 12L, "2026-09-03 08:30:00", false),
+            seed("AR-2026-000087", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.DELIVERED, 102L, 10L, 12L, "2026-09-03 08:30:00", true),
             seed("AR-2026-000091", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.REJECTED, 102L, 9L, 11L, "2026-09-05 15:10:00", true),
             seed("AR-2026-000098", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.DELIVERED, 101L, 8L, 10L, "2026-09-08 10:45:00", true),
-            seed("AR-2026-000103", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.PAYMENT_RECEIVED, 101L, 7L, 9L, "2026-09-10 13:25:00", false),
+            seed("AR-2026-000103", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.DELIVERED, 101L, 7L, 9L, "2026-09-10 13:25:00", true),
             seed("AR-2026-000118", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.DELIVERED, 101L, 5L, 6L, "2026-09-12 09:15:00", true),
             seed("AR-2026-000124", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.REJECTED, 101L, 4L, 5L, "2026-09-14 16:40:00", true),
             seed("AR-2026-000125", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.DELIVERED, 101L, 3L, 4L, "2026-09-15 11:05:00", true),
-            seed("AR-2026-000471", DocumentType.ACCOUNT_STATEMENT, "EN", OrderStatus.PAYMENT_RECEIVED, 101L, 6L, 8L, "2026-09-16 14:20:00", false),
-            seed("AR-2026-000489", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.PAYMENT_RECEIVED, 101L, 2L, 3L, "2026-09-17 09:30:00", false),
+            seed("AR-2026-000471", DocumentType.ACCOUNT_STATEMENT, "EN", OrderStatus.DELIVERED, 101L, 6L, 8L, "2026-09-16 14:20:00", true),
+            seed("AR-2026-000489", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.DELIVERED, 101L, 2L, 3L, "2026-09-17 09:30:00", true),
             seed("AR-2026-000512", DocumentType.ACCOUNT_STATEMENT, "AZ", OrderStatus.DELIVERED, 101L, 1L, 1L, "2026-09-18 10:00:00", true));
 
     private static SeedOrder seed(String orderNumber, DocumentType documentType, String language,
@@ -175,6 +175,27 @@ public class PresentationData implements ApplicationRunner {
             jdbc.update("INSERT INTO payments(order_id,card_id,amount,currency,status,transaction_no,created_at,updated_at) VALUES(?,?,?,?,'SUCCESS',?,?,?)",
                     orderId, cardId, price, order.documentType().getCurrency(), "TXN-SEED-" + order.orderNumber(),
                     Timestamp.valueOf(order.createdAt()), Timestamp.valueOf(order.createdAt()));
+        }
+
+        // Existing databases keep their rows: deliver demo seeds that are still waiting for
+        // payment so the embassy can review them, and backfill the missing timeline steps.
+        for (var order : SEED_ORDERS) {
+            int changed = jdbc.update(
+                    "UPDATE document_orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE order_number = ? AND status = ?",
+                    order.status().name(), order.orderNumber(), OrderStatus.PAYMENT_RECEIVED.name());
+            if (changed == 0 || order.status() != OrderStatus.DELIVERED) {
+                continue;
+            }
+            Long orderId = jdbc.queryForObject("SELECT id FROM document_orders WHERE order_number = ?",
+                    Long.class, order.orderNumber());
+            List<String> steps = jdbc.queryForList("SELECT step FROM order_timeline WHERE order_id = ?",
+                    String.class, orderId);
+            for (var step : order.steps()) {
+                if (!steps.contains(step.name())) {
+                    jdbc.update("INSERT INTO order_timeline(order_id,step,created_at,updated_at) VALUES(?,?,?,?)",
+                            orderId, step.name(), Timestamp.valueOf(order.createdAt()), Timestamp.valueOf(order.createdAt()));
+                }
+            }
         }
     }
 

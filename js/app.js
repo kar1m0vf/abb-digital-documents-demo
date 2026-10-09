@@ -7,7 +7,7 @@ import { review, payment, confirmation } from './views/checkout.js';
 import { dashboard, stats, inquiryTable, filteredRows, portalLogin } from './views/dashboard.js';
 import { ordersView, productsView } from './views/orders.js';
 import { openModal, closeModal, showDocument, toast, finHelp, phoneHelp } from './modal.js';
-import { requestOtp, verifyOtp, submitOrder, refreshOrders, logout, DEMO, portalLogin as signInPortal, loadPortal, portalDocumentDetail, notificationList, notificationRead, orderDetail } from './services/api-client.js';
+import { requestOtp, verifyOtp, submitOrder, refreshOrders, logout, DEMO, portalLogin as signInPortal, loadPortal, portalDocumentDetail, portalLogout, notificationList, notificationRead, orderDetail } from './services/api-client.js';
 import { backendEnabled, portalState } from './services/backend-state.js';
 import { cleanCode, validFin, validOtp, validRange, validCard, validExpiry, generateUUID, escapeHtml as esc, icon, dateLabel } from './utils.js';
 
@@ -21,7 +21,7 @@ document.addEventListener('keydown',event=>{
   if(['Tab','Enter',' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Escape'].includes(event.key))document.documentElement.dataset.inputModality='keyboard';
 },true);
 
-let timer=null;let lastFin='';let paymentKey=generateUUID();
+let timer=null;let lastFin='';let paymentKey=generateUUID();let pendingRejectId='';
 const routes=new Set(['documents','orders','payments','accounts','cards','embassy']);
 
 function render({focus=false}={}){
@@ -139,6 +139,31 @@ async function handlePortalLogin(){
   try{await signInPortal(username,password);state.embassy=portalState().embassyId;setBusy(false);await syncPortal();render({focus:true});}
   catch(error){setBusy(false);setError(error.message);}
 }
+function togglePassword(trigger){
+  const input=document.querySelector('#portal-password');if(!input)return;
+  const showing=input.type==='password';
+  input.type=showing?'text':'password';
+  trigger.setAttribute('aria-pressed',String(showing));
+  trigger.setAttribute('aria-label',showing?'Hide password':'Show password');
+  trigger.innerHTML=icon(showing?'eye-off':'eye');
+}
+function openRejectModal(id){
+  pendingRejectId=id;
+  openModal('Reject document',
+    `<div class="field"><label for="reject-note">Reason for rejection</label><textarea id="reject-note" class="reject-note" rows="4" placeholder="Describe why this document is rejected" required></textarea></div>`,
+    {footer:button('Reject','portal-reject-confirm')+button('Cancel','portal-reject-cancel','secondary')});
+  document.querySelector('#reject-note')?.focus();
+}
+async function confirmReject(){
+  const field=document.querySelector('#reject-note');
+  const note=field?.value.trim()||'';
+  if(!note){field?.focus();toast('Rejection reason is required.');return;}
+  const id=pendingRejectId;pendingRejectId='';
+  closeModal();setBusy(true);
+  try{await updateStatus(id,'rejected',note);refreshDashboard();toast('Status updated.');}
+  catch(error){refreshDashboard();toast(error.message);}
+  finally{setBusy(false);}
+}
 async function showNotifications(){
   if(backendEnabled&&state.authenticated){
     try{
@@ -195,6 +220,10 @@ document.addEventListener('click',async event=>{
     case 'clear-filter':state.filter='all';state.query='';state.page=1;document.querySelector('#inquiry-search').value='';refreshDashboard();break;
     case 'page':state.page=Math.max(1,Math.min(Math.ceil(filteredRows().length/10),Number(actionEl.dataset.page)));refreshDashboard();break;
     case 'portal-login':await handlePortalLogin();break;
+    case 'portal-logout':portalLogout();toast('You have been signed out.');navigate('embassy');break;
+    case 'toggle-password':togglePassword(actionEl);break;
+    case 'portal-reject-confirm':await confirmReject();break;
+    case 'portal-reject-cancel':pendingRejectId='';closeModal();refreshDashboard();break;
     case 'view-inquiry':await viewInquiry(actionEl.dataset.id);break;
   }
 });
@@ -229,7 +258,7 @@ main.addEventListener('keydown',event=>{const el=event.target;
   }
   const group=el.closest('[data-code]');if(!group)return;const inputs=[...group.querySelectorAll('input')];const i=inputs.indexOf(el);if(event.key==='Backspace'&&!el.value&&i>0){event.preventDefault();inputs[i-1].value='';inputs[i-1].focus();}else if(event.key==='ArrowLeft'&&i>0){event.preventDefault();inputs[i-1].focus();}else if(event.key==='ArrowRight'&&i<inputs.length-1){event.preventDefault();inputs[i+1].focus();}
 });
-document.addEventListener('keydown',event=>{if(event.key==='Escape'){document.querySelector('#main-nav')?.classList.remove('open');document.querySelector('[data-action="menu"]')?.setAttribute('aria-expanded','false');}});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'){document.querySelector('#main-nav')?.classList.remove('open');document.querySelector('[data-action="menu"]')?.setAttribute('aria-expanded','false');if(pendingRejectId){pendingRejectId='';refreshDashboard();}}});
 main.addEventListener('change',event=>{
   const el=event.target;if(state.busy)return;
   if(el.name==='document-type'){state.draft.type=el.value;if(el.value==='reference')state.draft.destination='embassy';invalidateReview();const nextStepper=document.createElement('template');nextStepper.innerHTML=stepper();document.querySelector('.stepper').replaceWith(nextStepper.content.querySelector('.stepper'));document.querySelector('.wizard').dataset.document=el.value;}
@@ -259,7 +288,12 @@ main.addEventListener('figma-select-change', async event => {
   const {id,context,value}=event.detail;
   if(id==='embassy'){state.draft.embassy=value;invalidateReview();}
   else if(id==='dashboard-embassy'){if(portalState())return;state.embassy=value;state.page=1;state.filter='all';state.query='';render();}
-  else if(id.startsWith('status-')&&context){setBusy(true);try{await updateStatus(context,value);refreshDashboard();toast('Status updated.');}catch(error){refreshDashboard();toast(error.message);}finally{setBusy(false);}}
+  else if(id.startsWith('status-')&&context){
+    const isPortalDoc=Boolean(portalState()?.documents.some(doc=>doc.id===context));
+    if(isPortalDoc&&value==='pending'){refreshDashboard();return;}
+    if(isPortalDoc&&value==='rejected'){openRejectModal(context);return;}
+    setBusy(true);try{await updateStatus(context,value);refreshDashboard();toast('Status updated.');}catch(error){refreshDashboard();toast(error.message);}finally{setBusy(false);}
+  }
 });
 installSelects();
 route();

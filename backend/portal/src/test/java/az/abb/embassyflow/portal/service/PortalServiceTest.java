@@ -112,7 +112,7 @@ class PortalServiceTest {
     void stats_computesPendingFromTotals() {
         when(portalUserService.findActiveById(1L)).thenReturn(user());
         when(orderRepository.countByEmbassyId(1L)).thenReturn(10L);
-        when(orderRepository.countByEmbassyIdAndStatusIn(1L, Set.of(OrderStatus.DELIVERED, OrderStatus.COMPLETED)))
+        when(orderRepository.countByEmbassyIdAndStatusIn(1L, Set.of(OrderStatus.COMPLETED)))
                 .thenReturn(4L);
         when(orderRepository.countByEmbassyIdAndStatus(1L, OrderStatus.REJECTED)).thenReturn(2L);
 
@@ -243,6 +243,19 @@ class PortalServiceTest {
 
         assertEquals(ErrorCodes.DOCUMENT_NOT_FOUND, ex.getCode());
         assertEquals(HttpStatus.NOT_FOUND, ex.getHttpStatus());
+    }
+
+    @Test
+    void documents_deliveredOrder_isPending() {
+        when(portalUserService.findActiveById(1L)).thenReturn(user());
+        when(customerService.findById(1L)).thenReturn(Optional.of(new CustomerInfo(1L, "Aydan Ahadova", "+994...")));
+        when(orderRepository.findByEmbassyIdOrderByIdDesc(1L))
+                .thenReturn(List.of(order(OrderStatus.DELIVERED)));
+
+        PortalDocumentsResponse response = portalService.documents(null, OrderFilter.PENDING, 0, 10, 1L);
+
+        assertEquals(1, response.documents().size());
+        assertEquals("PENDING", response.documents().get(0).status());
     }
 
     @Test

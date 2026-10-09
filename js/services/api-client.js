@@ -55,7 +55,7 @@ export const logout=()=>backend.logout();
 const periodMap={'1M':'1','3M':'3','6M':'6','1Y':'12'};
 const typeMap={ACCOUNT_STATEMENT:'statement',EMBASSY_CERTIFICATE:'reference'};
 const statusMap={COMPLETED:'completed',REJECTED:'rejected'};
-const portalStatusToView={COMPLETED:'COMPLETED',REJECTED:'REJECTED'};
+const portalStatusToView={completed:'COMPLETED',rejected:'REJECTED'};
 const embassyIdFor=name=>embassies.find(e=>e.id===name)?.id||embassies.find(e=>e.en.toLowerCase()===String(name).toLowerCase())?.id||embassies[0].id;
 function portalRow(doc,embassyId){
   return {id:doc.documentNumber,customer:doc.customerName,type:typeMap[doc.documentType]||'statement',
@@ -99,9 +99,11 @@ export async function portalDocumentDetail(documentNumber){
   if(!backendEnabled||!current)return null;
   return portalDetailOrder(await backend.portalDocument(documentNumber),current.embassyId);
 }
-export async function portalUpdateStatus(documentNumber,status){
+export async function portalUpdateStatus(documentNumber,status,note=''){
   if(!backendEnabled||!portalState())return false;
-  await backend.portalUpdateStatus(documentNumber,portalStatusToView[status]||'COMPLETED');
+  const view=portalStatusToView[status];
+  if(!view){await loadPortal();return true;}
+  await backend.portalUpdateStatus(documentNumber,view,note);
   await loadPortal();return true;
 }
 export function portalLogout(){backend.portalLogout();setPortalState(null);}
